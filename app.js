@@ -237,7 +237,7 @@ function normalizeCompanyPayload(payload) {
     hero_eyebrow: asText(pick(company, ['hero_eyebrow']), 'Curated Brand Portfolio'),
     hero_title: asText(
       pick(company, ['hero_title']),
-      'Built for distribution, private label, and market entry.'
+      'Built for <em>distribution</em>, private label, and market entry.'
     ),
     email: asText(pick(company, ['email']), 'having@having.co.kr'),
     address: asText(
@@ -315,13 +315,25 @@ async function bootstrapCatalog() {
   buildP1Filters();
   renderBrandGrid();
   renderHeroText();
-  renderFooter();
+  renderStaticCompanyBits();
   observeReveals();
 
   markLoadingStage('rendering');
   finishLoading();
 
   history.replaceState({ page: 'home' }, '', '#');
+}
+
+function renderStaticCompanyBits() {
+  const footerEmail = document.querySelectorAll('[data-company-email]');
+  const footerAddress = document.querySelectorAll('[data-company-address]');
+  const footerContactTitle = document.querySelectorAll('[data-company-contact-title]');
+  const footerPhone = document.querySelectorAll('[data-company-phone]');
+
+  footerEmail.forEach(el => { el.textContent = COMPANY.email || el.textContent; });
+  footerAddress.forEach(el => { el.textContent = COMPANY.address || el.textContent; });
+  footerContactTitle.forEach(el => { el.textContent = COMPANY.contact_title || el.textContent; });
+  footerPhone.forEach(el => { el.textContent = COMPANY.phone || el.textContent; });
 }
 
 function exclTone(status) {
@@ -361,55 +373,14 @@ function setP1Filter(id, btn) {
 }
 
 function renderHeroText() {
-  const eyebrow = document.getElementById('p1Eyebrow');
-  const title = document.getElementById('p1Title');
+  const eyebrow = document.getElementById('heroEyebrow');
+  const title = document.getElementById('heroTitle');
   if (eyebrow) eyebrow.textContent = COMPANY.hero_eyebrow || 'Curated Brand Portfolio';
   if (title) {
     title.innerHTML =
       COMPANY.hero_title ||
       `Built for <em>distribution</em>, private label, and market entry.`;
   }
-}
-
-function renderFooter() {
-  const root = document.getElementById('footerMount');
-  if (!root) return;
-
-  root.innerHTML = `
-    <footer class="footer">
-      <div class="footer-inner">
-        <div class="footer-top">
-          <div class="footer-brand">
-            <div class="footer-company">${COMPANY.name || 'HAVING Corp.'}</div>
-            <div class="footer-desc">
-              Curated Korean beauty portfolio for distribution, private label, and channel-led expansion.
-            </div>
-          </div>
-          <div class="footer-contact">
-            <div>
-              <div class="footer-k">${COMPANY.contact_title || 'Sales Representative'}</div>
-              <div class="footer-v">${COMPANY.email || 'having@having.co.kr'}</div>
-            </div>
-            <div>
-              <div class="footer-k">Address</div>
-              <div class="footer-v">${COMPANY.address || ''}</div>
-            </div>
-            ${
-              COMPANY.phone
-                ? `
-              <div>
-                <div class="footer-k">Phone</div>
-                <div class="footer-v">${COMPANY.phone}</div>
-              </div>
-            `
-                : ''
-            }
-          </div>
-        </div>
-        <div class="footer-bottom">© ${new Date().getFullYear()} ${COMPANY.name || 'HAVING Corp.'}</div>
-      </div>
-    </footer>
-  `;
 }
 
 function renderBrandGrid() {
@@ -654,6 +625,7 @@ async function goBrand(bid, opts = {}) {
 
   document.getElementById('p1')?.classList.remove('on');
   document.getElementById('p2')?.classList.add('on');
+  document.getElementById('p3')?.classList.remove('on');
 
   const m = BM[bid];
   if (!m) return;
@@ -1083,6 +1055,7 @@ function setFormStatus(message, type = 'success') {
   box.textContent = message;
   box.dataset.type = type;
   box.style.display = 'block';
+  box.style.color = type === 'error' ? '#9b3d2f' : 'var(--mid)';
 }
 
 function clearFormStatus() {
