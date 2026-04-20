@@ -254,9 +254,10 @@ html.modal-open{overflow:hidden}
 
 .mb-body{padding:0;flex:1}
 .mb-inner{display:grid;grid-template-columns:260px 1fr}
-.mb-img{height:100%;min-height:280px;background:var(--light);border-right:1px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:32px}
+.mb-img{height:100%;min-height:280px;background:#fff;;border-right:1px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:32px}
 .mb-img span{font-size:8px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(0,0,0,0.22);text-align:center}
 .mb-img-id{font-size:8px;color:rgba(0,0,0,0.18);margin-top:4px}
+.mb-img img{max-width:80%;max-height:80%;object-fit:contain;filter:drop-shadow(0 8px 16px rgba(0,0,0,0.08));}
 .mb-info{padding:28px 28px 0}
 .mb-type{font-size:10px;line-height:1.4;letter-spacing:0.14em;text-transform:uppercase;color:rgba(17,17,16,.54);font-weight:500;margin-bottom:10px}
 .mb-title{font-family:var(--serif);font-size:40px;font-weight:300;line-height:1.08;letter-spacing:-0.01em;margin-bottom:10px;color:var(--dark)}
