@@ -62,7 +62,8 @@ html.modal-open{overflow:hidden}
 .brand-card{
   border-bottom:1px solid var(--border);border-right:1px solid var(--border);
   cursor:pointer;transition:border-color 0.22s,transform 0.22s,color 0.22s;
-  position:relative;overflow:hidden;display:flex;align-items:flex-end;min-height:420px;background:#fff;color:var(--dark);
+  position:relative;overflow:hidden;display:flex;align-items:flex-end;
+  aspect-ratio:4/3;min-height:300px;background:#fff;color:var(--dark);
 }
 .brand-card:nth-child(2n){border-right:none}
 .brand-card.has-image::before{
@@ -75,7 +76,7 @@ html.modal-open{overflow:hidden}
 }
 .brand-card:hover{transform:translateY(-2px)}
 .brand-card.has-image:hover::before{transform:scale(1.05)}
-.brand-card-body{position:relative;z-index:2;padding:36px 36px 32px;max-width:68%}
+.brand-card-body{position:relative;z-index:2;padding:36px 36px 32px;max-width:72%}
 .brand-card.has-image .brand-card-body{color:#fff}
 .brand-card:not(.has-image) .brand-card-body{color:var(--dark)}
 .brand-card:not(.has-image):hover{background:var(--light)}
@@ -96,7 +97,6 @@ html.modal-open{overflow:hidden}
 .brand-card:hover .bc-arrow{transform:translate(3px,-3px);color:var(--dark)}
 .brand-card.has-image:hover .bc-arrow{color:#fff}
 .brand-card.has-image .brand-card-body *{text-shadow:0 1px 8px rgba(0,0,0,.20)}
-.brand-card-body{padding:36px 36px 32px;max-width:68%}
 @media(max-width:768px){
   .gnb-logo img{height:54px}
   .brand-grid{padding:0 var(--page-pad)}
@@ -342,7 +342,7 @@ html.modal-open{overflow:hidden}
   .p1-title{font-size:36px}
   .p1-filters{padding:14px var(--page-pad);top:var(--gnb-h)}
   .brand-grid{grid-template-columns:1fr}
-  .brand-card{border-right:none;min-height:340px}
+  .brand-card{border-right:none;aspect-ratio:3/2;min-height:240px}
   .brand-card:nth-child(2n){border-right:none}
   .p2-hero{padding:32px var(--page-pad) 24px}
   .p2-top{flex-direction:column;gap:24px}
@@ -401,6 +401,9 @@ html.modal-open{overflow:hidden}
 .form-note{font-size:11px;color:var(--mid);line-height:1.6;max-width:520px}
 .form-submit{font-size:10px;letter-spacing:0.18em;text-transform:uppercase;border:none;padding:15px 28px;background:var(--dark);color:#fff;cursor:pointer;font-family:var(--sans)}
 .form-submit:hover{opacity:.88}
+#inquiryStatus{width:100%;font-size:12px;letter-spacing:0.03em;padding:10px 14px;border-left:3px solid}
+#inquiryStatus[data-type="success"]{background:#f0faf4;border-color:#1f6f43;color:#1f6f43}
+#inquiryStatus[data-type="error"]{background:#fdf3f2;border-color:#9b3d2f;color:#9b3d2f}
 .brand-cta{margin-bottom:0}
 .footer{margin-top:0}
 @media(max-width:1024px){
@@ -666,8 +669,6 @@ html.modal-open{overflow:hidden}
 /* ===== TARGETED FIXES (appended) ===== */
 /* Fix: inquiry sidebar sticky top aligned with GNB */
 .inquiry-side{top:calc(var(--gnb-h) + 24px)!important}
-/* Fix: brand card without image reduce empty space */
-.brand-card:not(.has-image){min-height:280px!important}
 /* Fix: SKU grid 2 columns on tablet (481–768px) */
 @media(max-width:768px) and (min-width:481px){
   .sku-grid{grid-template-columns:repeat(2,1fr)!important}
@@ -679,25 +680,3 @@ html.modal-open{overflow:hidden}
 
 /* product description in modal */
 .mb-desc{font-size:14px;color:var(--mid);line-height:1.72;margin-bottom:16px;}
-
-
-/* append this at the very end of existing styles.css */
-
-.brand-card{
-  aspect-ratio: 1 / 0.6;
-  min-height: 300px;
-}
-
-.brand-card.has-image::before{
-  background-position:center center;
-}
-
-.brand-card-body{
-  max-width:72%;
-}
-
-@media(max-width:1024px){
-  .brand-card-body{
-    max-width:78%;
-  }
-}
