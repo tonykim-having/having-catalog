@@ -684,7 +684,7 @@ html.modal-open{overflow:hidden}
 /* append this at the very end of existing styles.css */
 
 .brand-card{
-  aspect-ratio: 1 / 0.7;
+  aspect-ratio: 1 / 0.6;
   min-height: 300px;
 }
 
