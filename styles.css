@@ -1,1008 +1,682 @@
-const PRIMARY_DATA_URL =
-  window.CATALOG_DATA_URL ||
-  'https://script.google.com/macros/s/AKfycbxg937uz2NriahqW40S_SKxiFksqgyMjDA3js-500sRKVIGFg_9qVsKlRwk-VN34SsTyA/exec';
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --serif:'Cormorant Garamond',serif;
+  --sans:'DM Sans',sans-serif;
+  --dark:#111110;--mid:#6B6B67;--light:#F7F6F3;--border:rgba(0,0,0,0.09);--page-pad:56px;--gnb-h:116px;
+}
+body{font-family:var(--sans);background:#fff;color:var(--dark);overflow-x:hidden}
+body.modal-open{position:fixed;left:0;right:0;width:100%;overflow:hidden}
+html.modal-open{overflow:hidden}
+#prog{position:fixed;top:0;left:0;height:2px;background:var(--dark);z-index:9999;width:0;pointer-events:none;transition:width 0.1s}
+.reveal{opacity:0;transform:translateY(20px);transition:opacity 0.7s ease,transform 0.7s ease}
+.reveal.in{opacity:1;transform:none}
+.reveal[data-delay="1"]{transition-delay:.05s}
+.reveal[data-delay="2"]{transition-delay:.1s}
+.reveal[data-delay="3"]{transition-delay:.15s}
+.reveal[data-delay="4"]{transition-delay:.2s}
+.reveal[data-delay="5"]{transition-delay:.25s}
+.reveal[data-delay="6"]{transition-delay:.3s}
 
-const INQUIRY_URL = window.CATALOG_INQUIRY_URL || PRIMARY_DATA_URL;
 
-let BM = {};
-let BORDER = [];
-let FILTERS = [];
-let COMPANY = {};
-let PRODUCTS_CACHE = {};
+/* ── GNB ── */
+.gnb{
+  position:fixed;top:0;left:0;right:0;height:var(--gnb-h);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 var(--page-pad);background:rgba(255,255,255,0.97);
+  border-bottom:1px solid var(--border);z-index:1000;backdrop-filter:blur(12px);
+}
+.gnb-logo{display:flex;align-items:center;cursor:pointer;user-select:none;flex-shrink:0}
+.gnb-logo img{display:block;height:60px;width:auto}
+.gnb-bc{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--mid);overflow:hidden}
+.gnb-bc .sep{opacity:0.3;flex-shrink:0}
+.gnb-bc .crumb{cursor:pointer;transition:color 0.2s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gnb-bc .crumb:hover{color:var(--dark)}
+.gnb-bc .crumb.cur{color:var(--dark);font-weight:500}
+.gnb-catalog{font-size:22px;letter-spacing:.22em;text-transform:uppercase;font-weight:700;color:var(--dark)!important;line-height:1;display:inline-block;white-space:nowrap}
 
-const DEFAULT_FILTERS = [{ id: 'all', label: 'All Brands' }];
+.gnb-right{display:flex;align-items:center;gap:20px;flex-shrink:0}
+.gnb-link{font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--mid);cursor:pointer;background:none;border:none;font-family:var(--sans)}
+.gnb-cta{font-size:10px;letter-spacing:0.14em;text-transform:uppercase;background:var(--dark);color:#fff;border:none;padding:9px 18px;cursor:pointer;font-family:var(--sans)}
 
-let activeFilter = 'all';
-let currentBrand = null;
-let currentSkuFilter = 'All';
-let savedScrollY = 0;
-let scrollLockCount = 0;
-let loadingProgress = 0;
-let loadingTimer = null;
+/* ── PAGES ── */
+.page{display:none;padding-top:var(--gnb-h);min-height:100vh}
+.page.on{display:block}
 
-const inquiryState = { brands: [], products: [] };
+/* ══════════════════
+   PAGE 1 — BRAND LIST
+══════════════════ */
+.p1-header{padding:56px var(--page-pad) 40px;border-bottom:1px solid var(--border)}
+.p1-eyebrow{font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--mid);margin-bottom:14px}
+.p1-title{font-family:var(--serif);font-size:48px;font-weight:300;line-height:1.08;margin-bottom:14px}
+.p1-title em{font-style:italic;color:var(--mid)}
 
-/* =========================
-   BASIC HELPERS
-========================= */
-function splitMulti(value) {
-  if (Array.isArray(value)) return value.filter(v => v !== '' && v != null);
-  if (value == null) return [];
-  const str = String(value).trim();
-  if (!str) return [];
-  return str
-    .split('|')
-    .flatMap(v => String(v).split(','))
-    .map(v => v.trim())
-    .filter(Boolean);
+/* FILTER CHIPS */
+.p1-filters{display:flex;gap:6px;flex-wrap:wrap;padding:20px var(--page-pad);border-bottom:1px solid var(--border);background:#fff;position:sticky;top:var(--gnb-h);z-index:50}
+.pf-chip{font-size:10px;letter-spacing:0.08em;text-transform:uppercase;padding:6px 14px;border:1px solid var(--border);background:transparent;color:var(--mid);cursor:pointer;font-family:var(--sans);transition:all 0.15s;white-space:nowrap}
+.pf-chip:hover{border-color:var(--dark);color:var(--dark)}
+.pf-chip.on{background:var(--dark);color:#fff;border-color:var(--dark)}
+
+/* BRAND CARDS */
+.brand-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:0;padding:0 var(--page-pad)}
+.brand-card{
+  border-bottom:1px solid var(--border);border-right:1px solid var(--border);
+  cursor:pointer;transition:border-color 0.22s,transform 0.22s,color 0.22s;
+  position:relative;overflow:hidden;display:flex;align-items:flex-end;
+  aspect-ratio:16/7;min-height:220px;background:#fff;color:var(--dark);
+}
+.brand-card:nth-child(2n){border-right:none}
+.brand-card.has-image::before{
+  content:'';position:absolute;inset:0;background-image:var(--card-bg);background-size:cover;background-position:right center;z-index:0;transition:transform .4s ease;
+}
+.brand-card.has-image::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(to top,rgba(0,0,0,.38) 0%,rgba(0,0,0,.18) 50%,rgba(0,0,0,.04) 100%);
+  z-index:1;
+}
+.brand-card:hover{transform:translateY(-2px)}
+.brand-card.has-image:hover::before{transform:scale(1.05)}
+.brand-card-body{position:relative;z-index:2;padding:36px 36px 32px;max-width:72%}
+.brand-card.has-image .brand-card-body{color:#fff}
+.brand-card:not(.has-image) .brand-card-body{color:var(--dark)}
+.brand-card:not(.has-image):hover{background:var(--light)}
+.brand-card-edge{position:absolute;bottom:0;left:0;height:2px;width:0;background:var(--dark);transition:width .3s;z-index:3}
+.brand-card:hover .brand-card-edge{width:100%}
+
+.bc-num{font-size:10px;letter-spacing:0.1em;color:rgba(0,0,0,0.28);margin-bottom:20px}
+.brand-card.has-image .bc-num{color:rgba(255,255,255,0.72)}
+.bc-name{font-family:var(--serif);font-size:30px;font-weight:300;line-height:1;margin-bottom:6px;color:inherit}
+.bc-tag{font-size:11px;margin-bottom:20px;letter-spacing:0.03em;color:inherit;opacity:.92}
+.bc-hashtags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:0}
+.bc-hash{font-size:10px;letter-spacing:0.05em;padding:4px 10px;background:#fff;color:var(--mid);border:1px solid var(--border);transition:all 0.2s}
+.brand-card.has-image .bc-hash{background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.22)}
+.brand-card:hover .bc-hash{border-color:rgba(0,0,0,0.18);color:var(--dark)}
+.brand-card.has-image:hover .bc-hash{border-color:rgba(255,255,255,.34);color:#fff}
+.bc-arrow{position:absolute;top:32px;right:36px;font-size:16px;color:rgba(0,0,0,0.15);transition:all 0.2s;z-index:3}
+.brand-card.has-image .bc-arrow{color:rgba(255,255,255,0.78)}
+.brand-card:hover .bc-arrow{transform:translate(3px,-3px);color:var(--dark)}
+.brand-card.has-image:hover .bc-arrow{color:#fff}
+.brand-card.has-image .brand-card-body *{text-shadow:0 1px 8px rgba(0,0,0,.20)}
+@media(max-width:768px){
+  .gnb-logo img{height:54px}
+  .brand-grid{padding:0 var(--page-pad)}
+  .brand-card-body{padding:24px 24px 22px;max-width:100%}
+  .footer-top{flex-direction:column;gap:18px}
 }
 
-function asText(value, fallback = '') {
-  if (value == null) return fallback;
-  return String(value).trim();
+
+/* ══════════════════
+   PAGE 2 — BRAND DETAIL
+══════════════════ */
+.p2-hero{padding:52px var(--page-pad) 36px;border-bottom:1px solid var(--border)}
+.p2-top{display:flex;align-items:stretch;justify-content:space-between;gap:40px}
+.p2-main-left{display:flex;flex-direction:column;justify-content:space-between;flex:1;min-width:0}
+.p2-copy{max-width:760px}
+.p2-tech-inline{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:32px}
+.p2-eyebrow{font-size:10px;line-height:1.4;letter-spacing:0.14em;text-transform:uppercase;color:rgba(17,17,16,.54);font-weight:500;margin-bottom:12px}
+.p2-name{font-family:var(--serif);font-size:40px;font-weight:300;line-height:1.08;letter-spacing:-0.01em;margin-bottom:10px;color:var(--dark)}
+.p2-tag{font-size:15px;line-height:1.55;color:var(--mid);font-weight:400;margin-bottom:16px}
+.p2-about{font-size:14px;color:var(--mid);line-height:1.72;max-width:620px}
+.p2-meta-col{display:flex;flex-direction:column;gap:0;min-width:220px;flex-shrink:0}
+.p2-mc{padding:14px 18px;border:1px solid var(--border);margin-top:-1px}
+.p2-mc-lbl{font-size:10px;line-height:1.4;letter-spacing:0.14em;text-transform:uppercase;color:rgba(17,17,16,.54);font-weight:500;margin-bottom:6px}
+.p2-mc-val{font-size:14px;color:var(--dark);line-height:1.62}
+.p2-supply{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.p2-sbadge{font-size:9px;letter-spacing:0.07em;padding:3px 9px;border:1px solid;text-transform:uppercase}
+.p2-market-list{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.p2-market-chip{font-size:9px;letter-spacing:0.05em;padding:3px 8px;border:1px solid var(--border);color:var(--dark);background:#fff}
+.p2-excl{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:4px}
+.p2-excl-badge{font-size:9px;letter-spacing:0.08em;padding:3px 9px;border:1px solid;text-transform:uppercase}
+.p2-excl-note{font-size:11px;color:var(--mid);line-height:1.45}
+.mb-market-row{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
+.mb-market-chip{font-size:8px;letter-spacing:0.05em;padding:3px 8px;border:1px solid var(--border);color:var(--dark);background:#fff}
+.mb-excl-row{grid-column:1/-1;display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.mb-excl-badge{font-size:8px;letter-spacing:0.08em;padding:3px 8px;border:1px solid;text-transform:uppercase}
+.mb-excl-note{font-size:10px;color:var(--mid);line-height:1.45}
+
+.p2-hero-img{width:100%;height:200px;background:var(--light);border:1px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
+.p2-hero-img span{font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(0,0,0,0.22)}
+
+.p2-tech{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:0 var(--page-pad) 12px;background:#fff}
+.p2-ti{padding:22px 24px;border:1px solid rgba(0,0,0,0.08);background:#fff;border-radius:0;min-height:84px}
+.p2-ti-name{font-size:14px;font-weight:600;line-height:1.45;margin-bottom:8px;color:var(--dark)}
+.p2-ti-desc{font-size:13px;color:var(--mid);line-height:1.68}
+
+/* SKU */
+.sku-wrap{padding:24px var(--page-pad) 64px}
+.sku-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px}
+.sku-title{font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:var(--mid)}
+.sku-filters{display:flex;gap:5px;flex-wrap:wrap}
+.sfb{font-size:10px;letter-spacing:0.07em;text-transform:uppercase;padding:5px 12px;border:1px solid var(--border);background:transparent;color:var(--mid);cursor:pointer;font-family:var(--sans);transition:all 0.15s}
+.sfb:hover{border-color:var(--dark);color:var(--dark)}
+.sfb.on{background:var(--dark);color:#fff;border-color:var(--dark)}
+
+.sku-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border)}
+.sku-card{background:#fff;cursor:pointer;transition:background 0.15s;position:relative;display:flex;flex-direction:column}
+.sku-card:hover{background:var(--light)}
+.sku-img{width:100%;aspect-ratio:1;background:var(--light);border-bottom:1px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;position:relative}
+.sku-img-lbl{font-size:8px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(0,0,0,0.2)}
+.sku-img-id{position:absolute;bottom:6px;right:8px;font-size:8px;color:rgba(0,0,0,0.16)}
+.sku-body{padding:12px 14px 16px;flex:1;display:flex;flex-direction:column}
+.sku-type{font-size:9px;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:5px}
+.sku-name{font-family:var(--serif);font-size:13px;font-weight:400;line-height:1.3;margin-bottom:6px;color:var(--dark);flex:1}
+.sku-vol{font-size:10px;color:var(--mid);margin-bottom:7px}
+.sku-tags{display:flex;flex-wrap:wrap;gap:3px}
+.sku-tag{font-size:8px;letter-spacing:0.04em;padding:2px 6px;border:1px solid var(--border);color:var(--mid)}
+.sku-arrow{position:absolute;top:10px;right:10px;font-size:11px;color:rgba(0,0,0,0.12);transition:all 0.2s}
+.sku-card:hover .sku-arrow{color:var(--dark);transform:translate(2px,-2px)}
+
+.brand-cta{display:flex;align-items:center;justify-content:space-between;padding:24px var(--page-pad);border-top:1px solid var(--border);background:var(--light);flex-wrap:wrap;gap:14px}
+.bcta-txt{font-size:13px;color:var(--mid)}
+.bcta-txt strong{color:var(--dark);font-weight:500}
+.bcta-btn{font-size:10px;letter-spacing:0.14em;text-transform:uppercase;border:none;padding:12px 24px;cursor:pointer;font-family:var(--sans);color:#fff;transition:opacity 0.2s;flex-shrink:0}
+.bcta-btn:hover{opacity:0.85}
+
+/* compact sticky brand bar */
+.brand-sticky{
+  position:fixed;top:var(--gnb-h);left:0;right:0;height:0;overflow:hidden;pointer-events:none;
+  background:rgba(255,255,255,0.96);backdrop-filter:blur(16px);
+  box-shadow:0 12px 30px rgba(17,17,16,0.08);z-index:920;transition:height .24s ease,opacity .24s ease,transform .24s ease;
+  opacity:0;transform:translateY(-6px);
+}
+.brand-sticky.on{height:88px;opacity:1;transform:none;pointer-events:auto}
+.brand-sticky-inner{
+  height:88px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 var(--page-pad);gap:20px;
+}
+.bs-left{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:6px;min-width:0;flex:1}
+.bs-name{font-family:var(--serif);font-size:28px;font-weight:300;line-height:1;color:var(--dark);white-space:nowrap}
+.bs-tag{font-size:12px;color:var(--mid);line-height:1.35;max-width:720px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bs-right{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.bs-chip,.bs-btn{
+  display:inline-flex;align-items:center;justify-content:center;min-height:40px;
+  font-size:10px;letter-spacing:0.12em;text-transform:uppercase;padding:0 14px;border-radius:999px;
+  border:1px solid rgba(17,17,16,0.10);background:rgba(255,255,255,0.98);color:var(--dark);cursor:pointer;font-family:var(--sans);transition:all .2s;
+}
+.bs-chip{cursor:default;color:var(--dark);font-weight:500;background:#fff}
+.bs-btn:hover{border-color:rgba(17,17,16,0.22);background:#fff}
+.bs-btn.fill{color:#fff;border-color:transparent}
+
+/* brand info modal */
+.info-modal-bg{
+  position:fixed;inset:0;background:rgba(17,17,16,0.45);
+  z-index:1900;display:none;align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(6px);
+}
+.info-modal-bg.on{display:flex}
+.info-modal{
+  width:100%;max-width:440px;max-height:86vh;background:#fff;overflow:auto;
+  animation:mIn 0.28s cubic-bezier(0.22,1,0.36,1);
+}
+.info-top{
+  position:sticky;top:0;background:#fff;z-index:5;padding:16px 20px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between
+}
+.info-top-lbl{font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:var(--mid)}
+.info-close{background:none;border:none;cursor:pointer;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--mid);font-family:var(--sans)}
+.info-body{padding:20px}
+.info-brand{font-family:var(--serif);font-size:32px;font-weight:300;line-height:1;margin-bottom:6px}
+.info-tag{font-size:12px;color:var(--mid);margin-bottom:18px}
+.info-card{border:1px solid var(--border);margin-top:-1px;padding:14px 16px}
+.info-label{font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--mid);margin-bottom:6px}
+.info-value{font-size:12px;color:var(--dark);line-height:1.5}
+.info-supply,.info-market-list,.info-excl{display:flex;flex-wrap:wrap;gap:6px}
+.info-badge{font-size:9px;letter-spacing:0.07em;padding:3px 9px;border:1px solid;text-transform:uppercase}
+.info-chip{font-size:9px;letter-spacing:0.05em;padding:3px 8px;border:1px solid var(--border);color:var(--dark);background:#fff}
+.info-note{font-size:11px;color:var(--mid);line-height:1.45}
+
+/* ══════════════════
+   MODAL — CENTER
+══════════════════ */
+.modal-bg{
+  position:fixed;inset:0;background:rgba(17,17,16,0.5);
+  z-index:2000;display:none;align-items:center;justify-content:center;
+  padding:24px;backdrop-filter:blur(6px);
+}
+.modal-bg.on{display:flex}
+.modal-box{
+  background:#fff;width:100%;max-width:680px;max-height:88vh;
+  overflow-y:auto;display:flex;flex-direction:column;
+  -webkit-overflow-scrolling:touch;
+  animation:mIn 0.28s cubic-bezier(0.22,1,0.36,1);
+}
+@keyframes mIn{from{opacity:0;transform:scale(0.96) translateY(12px)}to{opacity:1;transform:none}}
+.mb-top{
+  position:sticky;top:0;background:#fff;z-index:10;
+  padding:18px 32px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.mb-brand{display:flex;align-items:center;gap:8px}
+.mb-dot{width:8px;height:8px;border-radius:50%}
+.mb-brand-lbl{font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--mid)}
+.mb-close{background:none;border:none;cursor:pointer;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--mid);font-family:var(--sans);transition:color 0.2s}
+.mb-close:hover{color:var(--dark)}
+
+.mb-body{padding:0;flex:1}
+.mb-inner{display:grid;grid-template-columns:260px 1fr}
+.mb-img{height:100%;min-height:280px;background:var(--light);border-right:1px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:32px}
+.mb-img span{font-size:8px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(0,0,0,0.22);text-align:center}
+.mb-img-id{font-size:8px;color:rgba(0,0,0,0.18);margin-top:4px}
+.mb-info{padding:28px 28px 0}
+.mb-type{font-size:10px;line-height:1.4;letter-spacing:0.14em;text-transform:uppercase;color:rgba(17,17,16,.54);font-weight:500;margin-bottom:10px}
+.mb-title{font-family:var(--serif);font-size:40px;font-weight:300;line-height:1.08;letter-spacing:-0.01em;margin-bottom:10px;color:var(--dark)}
+.mb-sku{font-size:11px;line-height:1.5;letter-spacing:0.08em;text-transform:uppercase;color:rgba(17,17,16,.62);margin-bottom:18px}
+.mb-rule{height:1px;background:var(--border);margin:16px 0}
+.mb-lbl{font-size:10px;line-height:1.4;letter-spacing:0.14em;text-transform:uppercase;color:rgba(17,17,16,.54);font-weight:500;margin-bottom:8px}
+.mb-ingr{background:var(--light);padding:12px 16px;margin-bottom:16px}
+.mb-chips{display:flex;flex-wrap:wrap;gap:4px}
+.mb-chip{font-size:10px;line-height:1.2;letter-spacing:.04em;padding:4px 9px;background:#fff;border:1px solid rgba(0,0,0,0.1);color:var(--dark)}
+.mb-feats{margin-bottom:16px}
+.mb-feat{display:flex;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)}
+.mb-feat:last-child{border-bottom:none}
+.mb-feat-dot{width:4px;height:4px;border-radius:50%;margin-top:6px;flex-shrink:0}
+.mb-feat-text{font-size:14px;color:var(--mid);line-height:1.68}
+
+.mb-footer{padding:20px 28px 28px;border-top:1px solid var(--border);margin-top:4px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.mb-supply-row{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,1fr);gap:0;border:1px solid var(--border);margin-bottom:4px}
+.mb-sc{padding:12px 14px;border-right:1px solid var(--border);text-align:center}
+.mb-sc:last-child{border-right:none}
+.mb-sc-lbl{font-size:10px;line-height:1.4;letter-spacing:0.12em;text-transform:uppercase;color:rgba(17,17,16,.54);font-weight:500;margin-bottom:4px}
+.mb-sc-val{font-size:13px;color:var(--dark);line-height:1.55}
+.mb-certs{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
+.mb-cert{font-size:8px;letter-spacing:0.07em;padding:3px 8px;border:1px solid;text-transform:uppercase}
+.mb-cta{grid-column:1/-1;display:block;width:100%;padding:14px;border:none;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;font-family:var(--sans);color:#fff;cursor:pointer;transition:opacity 0.2s}
+.mb-cta:hover{opacity:0.85}
+
+
+
+/* COMMON TEXT SYSTEM */
+.brand-copy-title,
+.modal-copy-title{
+  font-family:var(--serif);
+  font-size:40px;
+  line-height:1.08;
+  font-weight:300;
+  letter-spacing:-0.01em;
+  color:var(--dark);
+}
+.brand-copy-subtitle,
+.modal-copy-subtitle{
+  font-size:15px;
+  line-height:1.55;
+  color:var(--mid);
+  font-weight:400;
+}
+.brand-copy-meta,
+.modal-copy-meta{
+  font-size:11px;
+  line-height:1.5;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:rgba(17,17,16,.62);
+}
+.brand-copy-body,
+.modal-copy-body{
+  font-size:14px;
+  line-height:1.72;
+  color:var(--mid);
+}
+.brand-copy-label,
+.modal-copy-label{
+  font-size:10px;
+  line-height:1.4;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:rgba(17,17,16,.54);
+  font-weight:500;
+}
+.brand-copy-chip,
+.modal-copy-chip{
+  font-size:10px;
+  line-height:1.2;
+  letter-spacing:.04em;
 }
 
-function asNumber(value, fallback = 0) {
-  if (typeof value === 'number' && Number.isFinite(value)) return value;
-  const n = Number(String(value).replace(/[^\d.-]/g, ''));
-  return Number.isFinite(n) ? n : fallback;
+/* ══════════════════
+   RESPONSIVE
+══════════════════ */
+@media(max-width:768px){
+  :root{--page-pad:24px;--gnb-h:98px}
+  .gnb{padding:0 var(--page-pad)}
+  .gnb-link{display:none}
+  .p1-header{padding:36px var(--page-pad) 24px}
+  .p1-title{font-size:36px}
+  .p1-filters{padding:14px var(--page-pad);top:var(--gnb-h)}
+  .brand-grid{grid-template-columns:1fr}
+  .brand-card{border-right:none;aspect-ratio:3/2;min-height:200px}
+  .brand-card:nth-child(2n){border-right:none}
+  .p2-hero{padding:32px var(--page-pad) 24px}
+  .p2-top{flex-direction:column;gap:24px}
+  .p2-main-left{display:block}
+  .p2-name{font-size:34px;line-height:1.08}
+  .p2-meta-col{min-width:unset;width:100%}
+  .p2-tech-inline,.p2-tech{grid-template-columns:1fr}
+  .p2-ti{border-right:none;border-bottom:1px solid var(--border);padding:20px}
+  .p2-ti:last-child{border-bottom:none}
+  .sku-wrap{padding:24px var(--page-pad) 48px}
+  .sku-grid{grid-template-columns:1fr}
+  .brand-cta{padding:20px var(--page-pad);flex-direction:column;align-items:flex-start}
+  .brand-sticky-inner{padding:0 var(--page-pad);height:78px}
+  .brand-sticky.on{height:78px}
+  .bs-name{font-size:26px}
+  .bs-tag{display:block;font-size:11px;max-width:42vw}
+  .bs-chip{display:none}
+  .info-modal-bg{padding:0;align-items:flex-end}
+  .info-modal{max-width:100%;max-height:92vh;border-radius:0}
+  .modal-bg{padding:0;align-items:flex-end}
+  .modal-box{max-width:100%;max-height:92vh;border-radius:0}
+  .mb-inner{grid-template-columns:1fr}
+  .mb-img{min-height:180px;border-right:none;border-bottom:1px solid var(--border)}
+  .mb-info{padding:20px 20px 0}
+  .mb-footer{padding:16px 20px 20px}
+}
+@media(max-width:480px){
+  .sku-grid{grid-template-columns:1fr}
+  .gnb-cta{padding:8px 14px;font-size:9px}
 }
 
-function pick(obj, keys, fallback = '') {
-  for (const key of keys) {
-    if (obj && obj[key] !== undefined && obj[key] !== null && String(obj[key]).trim() !== '') {
-      return obj[key];
-    }
-  }
-  return fallback;
+/* CTA BAR */
+
+
+/* INQUIRY PAGE */
+.inquiry-wrap{max-width:none;margin:0 auto;padding:72px var(--page-pad) 72px}
+.inquiry-head{margin-bottom:34px;padding-bottom:24px;border-bottom:1px solid var(--border)}
+.inquiry-eyebrow{font-size:10px;letter-spacing:0.22em;text-transform:uppercase;color:var(--mid);margin-bottom:14px}
+.inquiry-title{font-family:var(--serif);font-size:56px;font-weight:300;line-height:1.02;margin-bottom:14px;letter-spacing:-0.01em}
+.inquiry-copy{font-size:14px;color:var(--mid);line-height:1.8;max-width:760px}
+.inquiry-grid{display:grid;grid-template-columns:minmax(0,1.2fr) 320px;gap:36px;align-items:start}
+.inquiry-form{border:1px solid var(--border);background:#fff;padding:32px}
+.inquiry-side{display:flex;flex-direction:column;gap:12px;position:sticky;top:104px}
+.inquiry-card{border:1px solid var(--border);background:#fff;padding:18px 20px}
+.inquiry-card-k{font-size:9px;letter-spacing:0.16em;text-transform:uppercase;color:var(--mid);margin-bottom:10px}
+.inquiry-card-v{font-size:13px;color:var(--dark);line-height:1.7}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.form-field{display:flex;flex-direction:column;gap:8px;margin-bottom:18px}
+.form-field.full{grid-column:1/-1}
+.form-label{font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:var(--mid)}
+.form-input,.form-select,.form-textarea{width:100%;border:1px solid var(--border);background:#fff;padding:14px 15px;font-family:var(--sans);font-size:13px;color:var(--dark);transition:border-color .2s, box-shadow .2s}
+.form-input:focus,.form-select:focus,.form-textarea:focus{outline:none;border-color:rgba(0,0,0,0.22);box-shadow:0 0 0 3px rgba(17,17,16,0.04)}
+.form-select[multiple]{min-height:178px;padding:8px}
+.form-textarea{min-height:180px;resize:vertical;line-height:1.7}
+.form-actions{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:12px;flex-wrap:wrap;padding-top:18px;border-top:1px solid var(--border)}
+.form-note{font-size:11px;color:var(--mid);line-height:1.6;max-width:520px}
+.form-submit{font-size:10px;letter-spacing:0.18em;text-transform:uppercase;border:none;padding:15px 28px;background:var(--dark);color:#fff;cursor:pointer;font-family:var(--sans)}
+.form-submit:hover{opacity:.88}
+#inquiryStatus{width:100%;font-size:12px;letter-spacing:0.03em;padding:10px 14px;border-left:3px solid}
+#inquiryStatus[data-type="success"]{background:#f0faf4;border-color:#1f6f43;color:#1f6f43}
+#inquiryStatus[data-type="error"]{background:#fdf3f2;border-color:#9b3d2f;color:#9b3d2f}
+.brand-cta{margin-bottom:0}
+.footer{margin-top:0}
+@media(max-width:1024px){
+  .inquiry-wrap{padding:56px var(--page-pad) 64px}
+  .inquiry-grid{grid-template-columns:1fr;gap:18px}
+  .inquiry-side{position:static}
+}
+@media(max-width:768px){
+  .inquiry-wrap{padding:36px var(--page-pad) 48px}
+  .inquiry-title{font-size:38px;line-height:1.08}
+  .inquiry-copy{font-size:13px;line-height:1.75}
+  .inquiry-form{padding:20px}
+  .form-grid{grid-template-columns:1fr}
 }
 
-function slugify(value) {
-  return String(value || '')
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
+/* FOOTER */
+.footer{
+  margin-top:0;padding:44px var(--page-pad) 48px;
+  border-top:none;background:#111;color:#fff
+}
+.footer-v,.footer-v a,.footer-bottom,.footer-k,.footer-desc{color:#fff!important}
+.footer-company{font-size:18px;font-weight:700;line-height:1.4;margin-bottom:10px}
+.footer-qr{width:112px;height:112px;border:1px solid rgba(255,255,255,.24);display:flex;align-items:center;justify-content:center;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.7)}
+.footer-inner{width:100%;max-width:none;margin:0}
+.footer-top{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:40px;
+  margin-bottom:22px;flex-wrap:wrap
+}
+.footer-brand{max-width:520px}
+.footer-mark{margin-bottom:8px}
+.footer-mark img{display:block;height:28px;width:auto;max-width:180px}
+.footer-desc{font-size:13px;color:var(--mid);line-height:1.75}
+.footer-contact{display:flex;flex-direction:column;gap:6px;min-width:220px}
+.footer-k{font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:var(--mid);margin-bottom:4px}
+.footer-v,.footer-v a{font-size:13px;color:var(--dark);text-decoration:none}
+.footer-v a:hover{text-decoration:underline}
+.footer-bottom{
+  padding-top:14px;border-top:1px solid rgba(255,255,255,.16);
+  font-size:11px;letter-spacing:0.06em;color:rgba(255,255,255,.72)
 }
 
-function uniq(arr) {
-  return [...new Set(arr)];
+@media(max-width:768px){
+    .footer{padding:36px var(--page-pad) 44px}
+  .footer-top{flex-direction:column;gap:18px}
+  .footer-desc,.footer-v,.footer-v a{font-size:14px;line-height:1.7}
+  .footer-k{font-size:11px}
 }
 
-/* =========================
-   LOADING OVERLAY
-========================= */
-function setLoadingText(text) {
-  const el = document.getElementById('loadingText');
-  if (!el) return;
-  el.style.opacity = '0';
-  setTimeout(() => {
-    el.textContent = text;
-    el.style.opacity = '1';
-  }, 220);
+
+
+
+
+/* ===== FINAL GNB / BREADCRUMB / MOBILE OVERRIDES ===== */
+
+/* Desktop: keep Catalog typography identical on all pages */
+.gnb{
+  position:fixed !important;
+}
+.gnb-bc{
+  position:absolute !important;
+  left:50% !important;
+  transform:translateX(-50%) !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:10px !important;
+  min-width:0 !important;
+  max-width:56vw !important;
+}
+.gnb-bc .gnb-catalog{
+  font-size:24px !important;
+  line-height:1 !important;
+  letter-spacing:.20em !important;
+  text-transform:uppercase !important;
+  font-weight:700 !important;
+  color:var(--dark) !important;
+  white-space:nowrap !important;
+}
+.gnb-bc .sep{
+  font-size:14px !important;
+  color:rgba(17,17,16,.35) !important;
+}
+.gnb-bc .crumb.cur:not(.gnb-catalog){
+  font-size:13px !important;
+  line-height:1.4 !important;
+  letter-spacing:.08em !important;
+  text-transform:uppercase !important;
+  color:rgba(17,17,16,.62) !important;
+  font-weight:500 !important;
+  white-space:nowrap !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+  max-width:18vw !important;
+}
+.gnb-right{
+  margin-left:auto !important;
 }
 
-function setLoadingProgress(value) {
-  loadingProgress = Math.max(0, Math.min(100, value));
-  const el = document.getElementById('loadingBarFill');
-  if (el) el.style.width = `${loadingProgress}%`;
-}
-
-function showLoadingOverlay(initialText = 'Connecting to catalog data...') {
-  const layer = document.getElementById('loadingLayer');
-  if (!layer) return;
-  layer.classList.remove('hidden');
-  layer.style.display = '';
-  setLoadingText(initialText);
-  setLoadingProgress(8);
-  if (loadingTimer) clearInterval(loadingTimer);
-  loadingTimer = setInterval(() => {
-    if (loadingProgress < 60) setLoadingProgress(loadingProgress + 4);
-    else if (loadingProgress < 78) setLoadingProgress(loadingProgress + 1);
-  }, 180);
-}
-
-function hideLoadingOverlay() {
-  const layer = document.getElementById('loadingLayer');
-  if (!layer) return;
-  if (loadingTimer) clearInterval(loadingTimer);
-  setLoadingProgress(100);
-  setLoadingText('Almost ready...');
-  setTimeout(() => {
-    layer.classList.add('hidden');
-  }, 180);
-}
-
-/* =========================
-   FETCH / NORMALIZE
-========================= */
-async function fetchJson(url) {
-  const res = await fetch(url, { cache: 'no-store' });
-  if (!res.ok) throw new Error(`Fetch failed: ${res.status} ${res.statusText}`);
-  return res.json();
-}
-
-function normalizeBrandsPayload(payload) {
-  const brandRows = Array.isArray(payload?.brands) ? payload.brands : [];
-  const map = {};
-  const order = [];
-
-  brandRows.forEach((row, index) => {
-    const id =
-      asText(pick(row, ['brand_id', 'id', 'slug'])) ||
-      slugify(pick(row, ['name'], `brand-${index + 1}`));
-
-    if (!id) return;
-
-    const rawFilters = splitMulti(pick(row, ['filters', 'filter_tags', 'category_primary']));
-    const markets = splitMulti(pick(row, ['active_markets', 'markets']));
-    const supply = splitMulti(pick(row, ['supply_mode', 'supply', 'pb_available'])).map(v =>
-      v.toLowerCase() === 'true' ? 'Private Label' : v
-    );
-
-    map[id] = {
-      brand_id: id,
-      name: asText(pick(row, ['name'])),
-      accent: asText(pick(row, ['accent_color', 'accent']), '#111110'),
-      tag: asText(pick(row, ['short_description', 'tag'])),
-      about: asText(pick(row, ['full_description', 'about', 'description'])),
-      hashtags: splitMulti(pick(row, ['hashtags', 'key_claims'])),
-      filterTags: uniq(rawFilters.map(slugify).filter(Boolean)),
-      supply: supply.length ? supply : ['Brand Supply'],
-      channel: asText(pick(row, ['channel', 'target_channel'])),
-      totalSku: asNumber(pick(row, ['total_sku', 'sku_count', 'skuCount']), null),
-      filters: uniq(['All', ...rawFilters]).filter(Boolean),
-      markets,
-      exclusivity: {
-        status: asText(pick(row, ['exclusivity', 'exclusivity_status']), 'Case by Case'),
-        note: asText(pick(row, ['exclusivity_note', 'note']))
-      },
-      listImage: asText(pick(row, ['list_image_url', 'list_image', 'listImage', 'hero_image_url'])),
-      bgImage: asText(pick(row, ['hero_image_url', 'bg_image', 'bgImage', 'list_image_url']))
-    };
-
-    order.push(id);
-  });
-
-  const allFilterTags = uniq(order.flatMap(id => map[id]?.filterTags || []));
-  const filters = [{ id: 'all', label: 'All Brands' }].concat(
-    allFilterTags.map(id => ({
-      id,
-      label: id.split('-').map(part => part.charAt(0).toUpperCase() + part.slice(1)).join(' ')
-    }))
-  );
-
-  return { BM: map, BORDER: order, FILTERS: filters.length ? filters : DEFAULT_FILTERS };
-}
-
-function normalizeCompanyPayload(payload) {
-  // company can be an array (GAS returns rows as array) or an object
-  const raw = payload?.company;
-  const c = Array.isArray(raw) ? (raw[0] || {}) : (raw || {});
-  return {
-    name: asText(pick(c, ['name']), 'HAVING Corp.'),
-    hero_eyebrow: asText(pick(c, ['hero_eyebrow'])),
-    hero_title: asText(pick(c, ['hero_title'])),
-    email: asText(pick(c, ['email']), 'having@having.co.kr'),
-    address: asText(pick(c, ['address']), ''),
-    contact_title: asText(pick(c, ['contact_title']), 'Sales Representative'),
-    phone: asText(pick(c, ['phone']), ''),
-    logo_url: asText(pick(c, ['logo_url']), '')
-  };
-}
-
-function normalizeProductsPayload(payload) {
-  const rows = Array.isArray(payload?.products) ? payload.products : [];
-  return rows
-    .map(row => ({
-      id: asText(pick(row, ['sku', 'id'])),
-      b: asText(pick(row, ['brand_id', 'brandId'])),
-      name: asText(pick(row, ['name'])),
-      vol: asText(pick(row, ['volume', 'vol'])),
-      type: asText(pick(row, ['type'])),
-      tags: splitMulti(pick(row, ['subtitle', 'tags'])),
-      keys: splitMulti(pick(row, ['ingredients', 'keys'])),
-      feats: splitMulti(pick(row, ['features', 'feats'])),
-      moq: asText(pick(row, ['moq']), 'Contact'),
-      lead: asText(pick(row, ['lead_time', 'lead']), 'Contact'),
-      terms: asText(pick(row, ['terms']), 'Contact'),
-      desc: asText(pick(row, ['product_description', 'desc'])),
-      certs: splitMulti(pick(row, ['certifications', 'certs'])),
-      img: asText(pick(row, ['image_url', 'img', 'image']))
-    }))
-    .filter(p => p.id && p.b);
-}
-
-async function fetchBrandsAndCompany() {
-  const [brandsPayload, companyPayload] = await Promise.all([
-    fetchJson(`${PRIMARY_DATA_URL}?type=brands`),
-    fetchJson(`${PRIMARY_DATA_URL}?type=company`)
-  ]);
-
-  return {
-    ...normalizeBrandsPayload(brandsPayload),
-    COMPANY: normalizeCompanyPayload(companyPayload)
-  };
-}
-
-async function loadBrandProducts(brandId) {
-  if (!brandId) return [];
-  if (PRODUCTS_CACHE[brandId]) return PRODUCTS_CACHE[brandId];
-
-  const payload = await fetchJson(`${PRIMARY_DATA_URL}?type=products&brand_id=${encodeURIComponent(brandId)}`);
-  const products = normalizeProductsPayload(payload).filter(p => p.b === brandId);
-  PRODUCTS_CACHE[brandId] = products;
-  return products;
-}
-
-function applyCatalogData(data) {
-  BM = data.BM || {};
-  BORDER = data.BORDER || [];
-  FILTERS = data.FILTERS || DEFAULT_FILTERS;
-  COMPANY = data.COMPANY || {};
-}
-
-/* =========================
-   UI HELPERS
-========================= */
-function exclTone(status) {
-  const v = String(status || '').trim();
-  switch (v) {
-    case 'Open': return { label: 'Open', color: '#1f6f43' };
-    case 'Selective': return { label: 'Selective', color: '#8a5a00' };
-    case 'Restricted': return { label: 'Restricted', color: '#9b3d2f' };
-    case 'Not Available': return { label: 'Not Available', color: '#6B6B67' };
-    default: return { label: v || 'Case by Case', color: 'var(--dark)' };
-  }
-}
-
-function renderMarketsChips(markets, cls) {
-  return (markets || []).map(m => `<span class="${cls}">${m}</span>`).join('');
-}
-
-function getAllLoadedProducts() {
-  return Object.values(PRODUCTS_CACHE).flat();
-}
-
-/* =========================
-   PAGE 1
-========================= */
-function buildP1Filters() {
-  const el = document.getElementById('p1filters');
-  if (!el) return;
-  el.innerHTML = FILTERS.map(f =>
-    `<button class="pf-chip${f.id === 'all' ? ' on' : ''}" data-filter="${f.id}">${f.label}</button>`
-  ).join('');
-}
-
-function setP1Filter(id, btn) {
-  activeFilter = id;
-  document.querySelectorAll('.pf-chip').forEach(b => b.classList.remove('on'));
-  if (btn) btn.classList.add('on');
-  renderBrandGrid();
-}
-
-function renderHeroText() {
-  const eyebrowEl = document.getElementById('heroEyebrow');
-  const titleEl = document.getElementById('heroTitle');
-  if (eyebrowEl && COMPANY.hero_eyebrow) eyebrowEl.innerHTML = COMPANY.hero_eyebrow;
-  if (titleEl && COMPANY.hero_title) titleEl.innerHTML = COMPANY.hero_title;
-}
-
-function renderBrandGrid() {
-  const visible = BORDER.filter(bid => {
-    const m = BM[bid];
-    if (!m) return false;
-    if (activeFilter === 'all') return true;
-    return (m.filterTags || []).includes(activeFilter);
-  });
-
-  const root = document.getElementById('brandGrid');
-  if (!root) return;
-
-  root.innerHTML = visible.map((bid, i) => {
-    const m = BM[bid];
-    const hasImage = !!m.listImage;
-    const cls = `brand-card reveal in${hasImage ? ' has-image' : ''}`;
-    const style = hasImage ? ` style="--card-bg:url('${m.listImage}')"` : '';
-    return `
-      <div class="${cls}"${style} data-delay="${(i % 6) + 1}" data-brand="${bid}">
-        <div class="brand-card-body">
-          <div class="bc-num">${String(BORDER.indexOf(bid) + 1).padStart(2, '0')}</div>
-          <div class="bc-name">${m.name}</div>
-          <div class="bc-tag">${m.tag}</div>
-          <div class="bc-hashtags">${(m.hashtags || []).map(h => `<span class="bc-hash">${h}</span>`).join('')}</div>
-        </div>
-        <div class="bc-arrow">&#8599;</div>
-        <div class="brand-card-edge"></div>
-      </div>
-    `;
-  }).join('');
-
-  observeReveals();
-}
-
-/* =========================
-   PAGE 2
-========================= */
-function getCurrentBrandProducts() {
-  const list = PRODUCTS_CACHE[currentBrand] || [];
-  return list
-    .filter(p => p.b === currentBrand)
-    .filter(p => currentSkuFilter === 'All' ? true : p.type === currentSkuFilter);
-}
-
-function renderBrandInfoContent(m) {
-  const tone = exclTone(m.exclusivity.status);
-  const cachedProds = PRODUCTS_CACHE[m.brand_id] || [];
-  const displaySku = cachedProds.length > 0
-    ? cachedProds.length
-    : (m.totalSku != null && m.totalSku > 0 ? m.totalSku : 0);
-  return `
-    <div class="info-brand">${m.name}</div>
-    <div class="info-tag">${m.tag}</div>
-    <div class="info-card"><div class="info-label">About</div><div class="info-note">${m.about}</div></div>
-    <div class="info-card"><div class="info-label">Channel</div><div class="info-value">${m.channel}</div></div>
-    <div class="info-card"><div class="info-label">Total SKUs</div><div class="info-value">${displaySku}</div></div>
-    <div class="info-card"><div class="info-label">Supply Mode</div><div class="info-supply">${(m.supply || []).map(s => `<span class="info-badge" style="border-color:${m.accent};color:${m.accent}">${s}</span>`).join('')}</div></div>
-    <div class="info-card"><div class="info-label">Active Markets</div><div class="info-market-list">${renderMarketsChips(m.markets, 'info-chip')}</div></div>
-    <div class="info-card"><div class="info-label">Exclusivity</div><div class="info-excl"><span class="info-badge" style="border-color:${tone.color};color:${tone.color}">${tone.label}</span><div class="info-note">${m.exclusivity.note || ''}</div></div></div>
-  `;
-}
-
-function renderSkus(prods, m) {
-  if (!prods.length) {
-    return `<div style="grid-column:1/-1;padding:60px;text-align:center;font-size:13px;color:var(--mid)">No products in this category.</div>`;
-  }
-
-  return prods.map(
-    p => `
-      <div class="sku-card" data-sku="${p.id}">
-        <div class="sku-img">
-          ${p.img ? `<img src="${p.img}" alt="${p.name}" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:contain;display:block;padding:18px;">` : ''}
-          <span class="sku-img-id">${p.id}</span>
-        </div>
-        <div class="sku-body">
-          <div class="sku-type" style="color:${m.accent}">${p.type}</div>
-          <div class="sku-name">${p.name}</div>
-          <div class="sku-vol">${p.vol}</div>
-          <div class="sku-tags">${(p.tags || []).map(t => `<span class="sku-tag">${t}</span>`).join('')}</div>
-        </div>
-        <div class="sku-arrow">&#8599;</div>
-      </div>
-    `
-  ).join('');
-}
-
-function renderP2() {
-  const m = BM[currentBrand];
-  if (!m) return;
-
-  // All products for this brand (unfiltered), used for type extraction and count
-  const allBrandProds = PRODUCTS_CACHE[currentBrand] || [];
-  const prods = getCurrentBrandProducts();
-
-  // Compute real SKU count: prefer loaded product count, fall back to totalSku field if >0
-  const realSkuCount = allBrandProds.length > 0
-    ? allBrandProds.length
-    : (m.totalSku != null && m.totalSku > 0 ? m.totalSku : 0);
-
-  // Build SKU type filter options from actual loaded products
-  const skuTypes = uniq(allBrandProds.map(p => p.type).filter(Boolean));
-  const skuFilterOptions = ['All', ...skuTypes];
-
-  const heroStyle = m.bgImage
-    ? `border-top:3px solid ${m.accent};background-image:linear-gradient(to right,rgba(255,255,255,.82),rgba(255,255,255,.55)),url('${m.bgImage}');background-size:cover;background-position:center;`
-    : `border-top:3px solid ${m.accent};background:#fff;`;
-
-  const root = document.getElementById('p2c');
-  if (!root) return;
-
-  root.innerHTML = `
-    <div class="p2-hero" id="brandHero" style="${heroStyle}">
-      <div class="p2-top">
-        <div class="p2-main-left">
-          <div class="p2-copy">
-            <div class="p2-eyebrow" style="color:${m.accent}">HAVING Portfolio</div>
-            <div class="p2-name">${m.name}</div>
-            <div class="p2-tag">${m.tag}</div>
-            <div class="p2-about">${m.about}</div>
-            <div class="bc-hashtags" style="margin-top:16px">${(m.hashtags || []).map(h => `<span class="bc-hash">${h}</span>`).join('')}</div>
-          </div>
-        </div>
-        <div class="p2-meta-col">
-          <div class="p2-mc"><div class="p2-mc-lbl">Channel</div><div class="p2-mc-val">${m.channel}</div></div>
-          <div class="p2-mc"><div class="p2-mc-lbl">Total SKUs</div><div class="p2-mc-val" style="font-family:var(--serif);font-size:20px;font-weight:300;color:${m.accent}">${realSkuCount}</div></div>
-          <div class="p2-mc"><div class="p2-mc-lbl">Supply Mode</div><div class="p2-supply">${(m.supply || []).map(s => `<span class="p2-sbadge" style="border-color:${m.accent};color:${m.accent}">${s}</span>`).join('')}</div></div>
-          <div class="p2-mc"><div class="p2-mc-lbl">Active Markets</div><div class="p2-market-list">${renderMarketsChips(m.markets, 'p2-market-chip')}</div></div>
-          <div class="p2-mc"><div class="p2-mc-lbl">Exclusivity</div><div class="p2-excl"><span class="p2-excl-badge" style="border-color:${exclTone(m.exclusivity.status).color};color:${exclTone(m.exclusivity.status).color}">${exclTone(m.exclusivity.status).label}</span><span class="p2-excl-note">${m.exclusivity.note || ''}</span></div></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="sku-wrap">
-      <div class="sku-head">
-        <div class="sku-title">${realSkuCount} SKUs · showing ${prods.length}</div>
-        <div class="sku-filters">${skuFilterOptions.map(f => `<button class="sfb${currentSkuFilter === f ? ' on' : ''}" data-sf="${f}">${f}</button>`).join('')}</div>
-      </div>
-      <div class="sku-grid" id="skuGrid">${renderSkus(prods, m)}</div>
-    </div>
-
-    <div class="brand-cta">
-      <div class="bcta-txt">Interested in <strong>${m.name}</strong>?</div>
-      <button class="bcta-btn" style="background:${m.accent}" data-action="inquire-brand" data-brand="${currentBrand}">Inquire About This Brand &rarr;</button>
-    </div>
-  `;
-
-  const infoBody = document.getElementById('infoBody');
-  if (infoBody) infoBody.innerHTML = renderBrandInfoContent(m);
-
-  const bsName = document.getElementById('bsName');
-  const bsTag = document.getElementById('bsTag');
-  const bsSkuChip = document.getElementById('bsSkuChip');
-  const bsInquireBtn = document.getElementById('bsInquireBtn');
-
-  if (bsName) bsName.textContent = m.name;
-  if (bsTag) bsTag.textContent = m.tag;
-  if (bsSkuChip) bsSkuChip.textContent = `${realSkuCount} SKUs`;
-  if (bsInquireBtn) {
-    bsInquireBtn.style.background = m.accent;
-    bsInquireBtn.dataset.brand = currentBrand;
-  }
-}
-
-function setSkuFilter(filter, btn) {
-  currentSkuFilter = filter;
-  document.querySelectorAll('.sfb').forEach(b => b.classList.remove('on'));
-  if (btn) btn.classList.add('on');
-  const m = BM[currentBrand];
-  const filtered = getCurrentBrandProducts();
-  const allBrandProds = PRODUCTS_CACHE[currentBrand] || [];
-  const realSkuCount = allBrandProds.length > 0
-    ? allBrandProds.length
-    : (m.totalSku != null && m.totalSku > 0 ? m.totalSku : 0);
-  const grid = document.getElementById('skuGrid');
-  if (grid) grid.innerHTML = renderSkus(filtered, m);
-  const title = document.querySelector('.sku-title');
-  if (title) title.textContent = `${realSkuCount} SKUs · showing ${filtered.length}`;
-}
-
-/* =========================
-   MODAL / INFO / SCROLL LOCK
-========================= */
-function lockBodyScroll() {
-  scrollLockCount += 1;
-  if (scrollLockCount > 1) return;
-  savedScrollY = window.scrollY || window.pageYOffset || 0;
-  document.documentElement.classList.add('modal-open');
-  document.body.classList.add('modal-open');
-  document.body.style.top = `-${savedScrollY}px`;
-}
-
-function unlockBodyScroll() {
-  if (scrollLockCount === 0) return;
-  scrollLockCount -= 1;
-  if (scrollLockCount > 0) return;
-  const offset = parseInt(document.body.style.top || '0', 10) || 0;
-  document.documentElement.classList.remove('modal-open');
-  document.body.classList.remove('modal-open');
-  document.body.style.top = '';
-  window.scrollTo(0, Math.abs(offset));
-}
-
-function openInfoModal() {
-  if (!currentBrand) return;
-  document.getElementById('infoBody').innerHTML = renderBrandInfoContent(BM[currentBrand]);
-  document.getElementById('infoModalBg')?.classList.add('on');
-  lockBodyScroll();
-}
-
-function closeInfoModal() {
-  const el = document.getElementById('infoModalBg');
-  if (el?.classList.contains('on')) {
-    el.classList.remove('on');
-    unlockBodyScroll();
-  }
-}
-
-function openModal(id) {
-  const p = (PRODUCTS_CACHE[currentBrand] || []).find(x => x.id === id);
-  if (!p) return;
-
-  const m = BM[p.b];
-  const dot = document.getElementById('mDot');
-  const lbl = document.getElementById('mLbl');
-  const body = document.getElementById('mBody');
-
-  if (dot) dot.style.background = m.accent;
-  if (lbl) lbl.innerHTML = `${m.name} &middot; ${p.type}`;
-
-  if (body) {
-    body.innerHTML = `
-      <div class="mb-inner">
-        <div class="mb-img">
-          ${p.img ? `<img src="${p.img}" alt="${p.name}" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:contain;display:block;max-height:320px;">` : ''}
-          <span class="mb-img-id">${p.id}</span>
-        </div>
-        <div class="mb-info">
-          <div class="mb-type" style="color:${m.accent}">${p.type}</div>
-          <div class="mb-title">${p.name}</div>
-          <div class="mb-sku">SKU ${p.id} · ${p.vol}</div>
-          <div class="mb-rule"></div>
-          ${p.desc ? `<div class="mb-lbl">Description</div><div class="mb-desc">${p.desc}</div>` : ''}
-          <div class="mb-lbl">Key Ingredients</div>
-          <div class="mb-ingr"><div class="mb-chips">${(p.keys || []).map(k => `<span class="mb-chip">${k}</span>`).join('')}</div></div>
-          <div class="mb-lbl">Features</div>
-          <div class="mb-feats">${(p.feats || []).map(f => `<div class="mb-feat"><div class="mb-feat-dot" style="background:${m.accent}"></div><div class="mb-feat-text">${f}</div></div>`).join('')}</div>
-        </div>
-      </div>
-      <div class="mb-footer">
-        <div class="mb-market-row">${renderMarketsChips(m.markets, 'mb-market-chip')}</div>
-        <div class="mb-excl-row"><span class="mb-excl-badge" style="border-color:${exclTone(m.exclusivity.status).color};color:${exclTone(m.exclusivity.status).color}">${exclTone(m.exclusivity.status).label}</span><span class="mb-excl-note">${m.exclusivity.note || ''}</span></div>
-        <div class="mb-certs">${(p.certs || []).map(c => `<span class="mb-cert" style="border-color:${m.accent};color:${m.accent}">${c}</span>`).join('')}</div>
-        <button class="mb-cta" style="background:${m.accent}" data-action="inquire-product" data-product="${p.id}">Inquire About This Product &rarr;</button>
-      </div>
-    `;
+/* Mobile: logo + centered Catalog only */
+@media (max-width: 768px){
+  :root{
+    --gnb-h: 78px !important;
+    --page-pad: 24px !important;
   }
 
-  document.getElementById('modalBg')?.classList.add('on');
-  document.getElementById('modalBox')?.scrollTo(0, 0);
-  lockBodyScroll();
-}
-
-function closeModal() {
-  const el = document.getElementById('modalBg');
-  if (el?.classList.contains('on')) {
-    el.classList.remove('on');
-    unlockBodyScroll();
+  .gnb{
+    height:var(--gnb-h) !important;
+    padding:0 20px !important;
+    display:flex !important;
+    align-items:center !important;
+    justify-content:space-between !important;
   }
-}
-
-const revealObserver = new IntersectionObserver((entries) => {
-  entries.forEach(entry => {
-    if (entry.isIntersecting) entry.target.classList.add('in');
-  });
-}, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
-
-function observeReveals() {
-  document.querySelectorAll('.reveal').forEach(el => {
-    if (el.classList.contains('in')) return;
-    revealObserver.observe(el);
-  });
-}
-
-function handleBrandSticky() {
-  const sticky = document.getElementById('brandSticky');
-  if (!sticky) return;
-  if (!currentBrand || !document.getElementById('p2')?.classList.contains('on')) {
-    sticky.classList.remove('on');
-    return;
+  .gnb-logo img{
+    height:40px !important;
+    width:auto !important;
+    max-width:90px !important;
   }
-  const hero = document.getElementById('brandHero');
-  if (!hero) {
-    sticky.classList.remove('on');
-    return;
+  .gnb-right{
+    display:none !important;
   }
-  const trigger = hero.offsetTop + Math.max(220, hero.offsetHeight - 180);
-  sticky.classList.toggle('on', window.scrollY > trigger);
-}
-
-/* =========================
-   INQUIRY
-========================= */
-function getBrandOptions() {
-  return BORDER.map(bid => `<option value="${bid}">${BM[bid].name}</option>`).join('');
-}
-
-async function getProductsForBrands(brandIds = []) {
-  if (!brandIds.length) return [];
-  const groups = await Promise.all(brandIds.map(id => loadBrandProducts(id)));
-  return groups.flat();
-}
-
-async function updateInquiryProducts(selectedBrands = [], selectedProducts = []) {
-  const sel = document.getElementById('inqProducts');
-  if (!sel) return;
-  const prods = await getProductsForBrands(selectedBrands);
-  sel.innerHTML = prods.map(p => `<option value="${p.id}">${BM[p.b].name} — ${p.name}</option>`).join('');
-  [...sel.options].forEach(opt => {
-    opt.selected = selectedProducts.includes(opt.value);
-  });
-}
-
-function updateInquirySummary() {
-  const box = document.getElementById('inquirySummary');
-  if (!box) return;
-  const brandNames = inquiryState.brands.length ? inquiryState.brands.map(id => BM[id]?.name || id).join('<br>') : 'No brand selected';
-  const productNames = inquiryState.products.length
-    ? inquiryState.products.map(id => {
-        const p = getAllLoadedProducts().find(x => x.id === id);
-        return p ? `${BM[p.b].name} — ${p.name}` : id;
-      }).join('<br>')
-    : 'No product selected';
-  box.innerHTML = `<strong>Brands</strong><br>${brandNames}<br><br><strong>Products</strong><br>${productNames}`;
-}
-
-function seedInquiryMessage() {
-  const msg = document.getElementById('inqMessage');
-  if (!msg) return;
-  const brandNames = inquiryState.brands.length ? inquiryState.brands.map(id => BM[id]?.name || id).join(', ') : '';
-  const productNames = inquiryState.products.length
-    ? inquiryState.products.map(id => {
-        const p = getAllLoadedProducts().find(x => x.id === id);
-        return p ? p.name : id;
-      }).join(', ')
-    : '';
-  const lines = [];
-  if (brandNames) lines.push(`Interested brands: ${brandNames}`);
-  if (productNames) lines.push(`Interested products: ${productNames}`);
-  lines.push('Please share product details, availability, and next steps.');
-  msg.value = lines.join('\n');
-}
-
-async function handleInquiryBrandChange() {
-  const brandSel = document.getElementById('inqBrand');
-  inquiryState.brands = [...brandSel.selectedOptions].map(o => o.value).filter(Boolean);
-
-  const stillValid = inquiryState.products.filter(pid => {
-    const p = getAllLoadedProducts().find(x => x.id === pid);
-    return p && inquiryState.brands.includes(p.b);
-  });
-
-  inquiryState.products = stillValid;
-  await updateInquiryProducts(inquiryState.brands, inquiryState.products);
-  updateInquirySummary();
-  seedInquiryMessage();
-}
-
-function handleInquiryProductsChange() {
-  const prodSel = document.getElementById('inqProducts');
-  inquiryState.products = [...prodSel.selectedOptions].map(o => o.value);
-  updateInquirySummary();
-  seedInquiryMessage();
-}
-
-async function renderInquiryPage() {
-  const brandSel = document.getElementById('inqBrand');
-  if (!brandSel) return;
-  brandSel.innerHTML = getBrandOptions();
-  [...brandSel.options].forEach(opt => { opt.selected = inquiryState.brands.includes(opt.value); });
-  await updateInquiryProducts(inquiryState.brands, inquiryState.products);
-  updateInquirySummary();
-  seedInquiryMessage();
-}
-
-function setFormStatus(message, type = 'success') {
-  const box = document.getElementById('inquiryStatus');
-  if (!box) return;
-  box.textContent = message;
-  box.dataset.type = type;
-  box.style.display = 'block';
-}
-
-function clearFormStatus() {
-  const box = document.getElementById('inquiryStatus');
-  if (!box) return;
-  box.textContent = '';
-  box.style.display = 'none';
-  box.dataset.type = '';
-}
-
-function goInquiryGeneral(opts = {}) {
-  closeModal();
-  closeInfoModal();
-  document.getElementById('p1')?.classList.remove('on');
-  document.getElementById('p2')?.classList.remove('on');
-  document.getElementById('p3')?.classList.add('on');
-  document.getElementById('brandSticky')?.classList.remove('on');
-
-  const bc = document.getElementById('bc');
-  if (bc) {
-    bc.innerHTML = `<span class="crumb gnb-catalog" data-action="go-home">Catalog</span><span class="sep bc-desktop-only">/</span><span class="crumb cur bc-desktop-only">Inquiry</span>`;
+  .gnb-bc{
+    position:absolute !important;
+    left:50% !important;
+    transform:translateX(-50%) !important;
+    max-width:50vw !important;
+    gap:8px !important;
+  }
+  .bc-desktop-only{
+    display:none !important;
+  }
+  .gnb-bc .gnb-catalog{
+    font-size:16px !important;
+    letter-spacing:.12em !important;
+  }
+  .gnb-bc .sep{
+    font-size:11px !important;
+  }
+  .gnb-bc .crumb.cur:not(.gnb-catalog){
+    font-size:10px !important;
+    max-width:20vw !important;
   }
 
-  const prog = document.getElementById('prog');
-  if (prog) prog.style.background = 'var(--dark)';
-
-  renderInquiryPage();
-  window.scrollTo(0, 0);
-
-  if (!opts.skipPush) history.pushState({ page: 'inquiry' }, '', '#inquiry');
-}
-
-function goInquiryBrand(bid) {
-  inquiryState.brands = bid ? [bid] : [];
-  inquiryState.products = [];
-  goInquiryGeneral();
-}
-
-async function goInquiryProduct(pid) {
-  let p = getAllLoadedProducts().find(x => x.id === pid);
-  if (!p && currentBrand) {
-    await loadBrandProducts(currentBrand);
-    p = (PRODUCTS_CACHE[currentBrand] || []).find(x => x.id === pid);
+  .page{
+    padding-top:var(--gnb-h) !important;
   }
-  if (!p) return;
-  inquiryState.brands = [p.b];
-  inquiryState.products = [pid];
-  closeModal();
-  goInquiryGeneral();
-}
-
-function submitInquiry(e) {
-  e.preventDefault();
-
-  const company = document.getElementById('inqCompany').value.trim();
-  const email = document.getElementById('inqEmail').value.trim();
-  const phone = document.getElementById('inqPhone').value.trim();
-  const region = document.getElementById('inqRegion').value.trim();
-
-  const brandIds = [...document.getElementById('inqBrand').selectedOptions].map(o => o.value);
-  const brandNames = brandIds.map(id => BM[id]?.name || id);
-
-  const productIds = [...document.getElementById('inqProducts').selectedOptions].map(o => o.value);
-  const productNames = productIds.map(id => {
-    const p = getAllLoadedProducts().find(x => x.id === id);
-    return p ? `${BM[p.b]?.name || p.b} — ${p.name}` : id;
-  });
-
-  inquiryState.brands = brandIds;
-  inquiryState.products = productIds;
-
-  const message = document.getElementById('inqMessage').value.trim();
-  const submitBtn = document.querySelector('.form-submit');
-  const originalText = submitBtn ? submitBtn.textContent : 'Send Inquiry';
-
-  if (submitBtn) {
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Sending...';
+  .p1-filters{
+    top:var(--gnb-h) !important;
   }
-
-  clearFormStatus();
-
-  const payload = {
-    company, email, phone, region,
-    brand_ids: brandIds, brand_names: brandNames,
-    product_ids: productIds, product_names: productNames,
-    message, source: 'web_catalog'
-  };
-
-  fetch(INQUIRY_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  })
-    .then(async res => {
-      let json = {};
-      try { json = await res.json(); } catch (_) {}
-      if (!res.ok || json.ok === false) throw new Error(json.error || `HTTP ${res.status}`);
-      document.getElementById('inquiryForm').reset();
-      inquiryState.brands = [];
-      inquiryState.products = [];
-      renderInquiryPage();
-      if (document.getElementById('inquiryStatus')) {
-        setFormStatus('Inquiry sent successfully.', 'success');
-      } else {
-        alert('Inquiry sent successfully.');
-      }
-    })
-    .catch(err => {
-      console.error(err);
-      if (document.getElementById('inquiryStatus')) {
-        setFormStatus('Inquiry sending failed. Please try again.', 'error');
-      } else {
-        alert('Inquiry sending failed. Please try again.');
-      }
-    })
-    .finally(() => {
-      if (submitBtn) {
-        submitBtn.disabled = false;
-        submitBtn.textContent = originalText;
-      }
-    });
-}
-
-/* =========================
-   NAVIGATION
-========================= */
-async function goBrand(bid, opts = {}) {
-  currentBrand = bid;
-  currentSkuFilter = 'All';
-
-  showLoadingOverlay('Loading brand...');
-
-  document.getElementById('p1')?.classList.remove('on');
-  document.getElementById('p3')?.classList.remove('on');
-  document.getElementById('p2')?.classList.add('on');
-
-  const m = BM[bid];
-  if (!m) {
-    hideLoadingOverlay();
-    return;
+  .brand-sticky{
+    top:var(--gnb-h) !important;
   }
-
-  const bc = document.getElementById('bc');
-  if (bc) {
-    bc.innerHTML = `<span class="crumb gnb-catalog" data-action="go-home">Catalog</span><span class="sep bc-desktop-only">/</span><span class="crumb cur bc-desktop-only">${m.name}</span>`;
+  .brand-sticky.on{
+    height:92px !important;
   }
-
-  const prog = document.getElementById('prog');
-  if (prog) prog.style.background = m.accent;
-
-  try {
-    const root = document.getElementById('p2c');
-    if (root) {
-      root.innerHTML = `
-        <div class="sku-wrap">
-          <div style="padding:48px 0;text-align:center;font-size:13px;color:var(--mid)">Loading products...</div>
-        </div>
-      `;
-    }
-    await loadBrandProducts(bid);
-    setLoadingText('Loading products...');
-    setLoadingProgress(84);
-    renderP2();
-    setLoadingText('Preparing brand page...');
-    setLoadingProgress(94);
-    window.scrollTo(0, 0);
-    handleBrandSticky();
-    if (!opts.skipPush) history.pushState({ page: 'brand', bid }, '', `#brand=${bid}`);
-    hideLoadingOverlay();
-  } catch (err) {
-    console.error(err);
-    const root = document.getElementById('p2c');
-    if (root) {
-      root.innerHTML = `<div class="sku-wrap"><div style="padding:48px 0;text-align:center;font-size:13px;color:var(--mid)">Failed to load products. Please try again.</div></div>`;
-    }
-    hideLoadingOverlay();
+  .brand-sticky-inner{
+    height:92px !important;
+    padding:10px 20px !important;
+    grid-template-columns:minmax(0,1fr) auto !important;
+    grid-template-rows:auto auto !important;
+    column-gap:10px !important;
+    row-gap:6px !important;
+  }
+  .bs-name{
+    font-size:18px !important;
+  }
+  .bs-tag{
+    font-size:11px !important;
+    line-height:1.3 !important;
+  }
+  .bs-right{
+    gap:6px !important;
+  }
+  #bsInfoBtn{
+    min-height:30px !important;
+    padding:0 10px !important;
+    font-size:9px !important;
+  }
+  .bs-btn.fill{
+    min-height:34px !important;
+    padding:0 12px !important;
+    font-size:9px !important;
   }
 }
 
-function goP1(opts = {}) {
-  closeModal();
-  closeInfoModal();
 
-  document.getElementById('p2')?.classList.remove('on');
-  document.getElementById('p3')?.classList.remove('on');
-  document.getElementById('p1')?.classList.add('on');
 
-  const bc = document.getElementById('bc');
-  if (bc) bc.innerHTML = `<span class="crumb gnb-catalog cur" data-action="go-home">Catalog</span>`;
-
-  const prog = document.getElementById('prog');
-  if (prog) prog.style.background = 'var(--dark)';
-
-  document.getElementById('brandSticky')?.classList.remove('on');
-  renderHeroText();
-  renderBrandGrid();
-  window.scrollTo(0, 0);
-
-  if (!opts.skipPush) history.pushState({ page: 'home' }, '', '#');
-}
-
-/* =========================
-   EVENT BINDINGS
-========================= */
-function initEventBindings() {
-  document.addEventListener('click', e => {
-    const home = e.target.closest('[data-action="go-home"]');
-    if (home) { e.preventDefault(); goP1(); return; }
-
-    const logo = e.target.closest('#gnbLogo');
-    if (logo) { e.preventDefault(); goP1(); return; }
-
-    const gnbInq = e.target.closest('#gnbInquireBtn');
-    if (gnbInq) { e.preventDefault(); goInquiryGeneral(); return; }
-
-    const stickyInq = e.target.closest('#bsInquireBtn');
-    if (stickyInq && currentBrand) { e.preventDefault(); goInquiryBrand(currentBrand); return; }
-
-    const infoBtn = e.target.closest('#bsInfoBtn');
-    if (infoBtn) { e.preventDefault(); openInfoModal(); return; }
-
-    const infoClose = e.target.closest('#infoCloseBtn');
-    if (infoClose) { e.preventDefault(); closeInfoModal(); return; }
-
-    const modalClose = e.target.closest('#modalCloseBtn');
-    if (modalClose) { e.preventDefault(); closeModal(); return; }
-
-    const pf = e.target.closest('.pf-chip[data-filter]');
-    if (pf) { setP1Filter(pf.dataset.filter, pf); return; }
-
-    const brandCard = e.target.closest('.brand-card[data-brand]');
-    if (brandCard) { goBrand(brandCard.dataset.brand); return; }
-
-    const skuFilter = e.target.closest('.sfb[data-sf]');
-    if (skuFilter) { setSkuFilter(skuFilter.dataset.sf, skuFilter); return; }
-
-    const skuCard = e.target.closest('.sku-card[data-sku]');
-    if (skuCard) { openModal(skuCard.dataset.sku); return; }
-
-    const inqBrand = e.target.closest('[data-action="inquire-brand"]');
-    if (inqBrand) { goInquiryBrand(inqBrand.dataset.brand || currentBrand); return; }
-
-    const inqProduct = e.target.closest('[data-action="inquire-product"]');
-    if (inqProduct) { goInquiryProduct(inqProduct.dataset.product); return; }
-  });
-
-  const infoBg = document.getElementById('infoModalBg');
-  if (infoBg) {
-    infoBg.addEventListener('click', e => { if (e.target === infoBg) closeInfoModal(); });
+/* ===== MOBILE CONTENT SIMPLIFICATION ===== */
+@media (max-width: 768px){
+  /* Brand detail: hide heavy meta + tech on mobile */
+  .p2-meta-col,
+  .p2-tech-inline,
+  .p2-tech{
+    display:none !important;
   }
 
-  const modalBg = document.getElementById('modalBg');
-  if (modalBg) {
-    modalBg.addEventListener('click', e => { if (e.target === modalBg) closeModal(); });
+  /* Keep hero copy simpler on mobile */
+  .p2-hero{
+    padding-top:22px !important;
+    padding-bottom:18px !important;
+  }
+  .p2-copy{
+    max-width:100% !important;
+  }
+  .p2-about{
+    max-width:100% !important;
+    font-size:13px !important;
+    line-height:1.62 !important;
   }
 
-  const inquiryForm = document.getElementById('inquiryForm');
-  if (inquiryForm) inquiryForm.addEventListener('submit', submitInquiry);
+  /* Sticky: remove inquire button, keep name + short text + brand info only */
+  .brand-sticky.on{
+    height:86px !important;
+  }
+  .brand-sticky-inner{
+    height:86px !important;
+    padding:10px 20px !important;
+    grid-template-columns:minmax(0,1fr) auto !important;
+    grid-template-rows:auto auto !important;
+    column-gap:10px !important;
+    row-gap:4px !important;
+  }
+  .bs-right{
+    grid-column:2/3 !important;
+    grid-row:1/3 !important;
+    gap:0 !important;
+  }
+  .bs-btn.fill{
+    display:none !important;
+  }
+  #bsInfoBtn{
+    display:inline-flex !important;
+    min-height:32px !important;
+    padding:0 12px !important;
+    font-size:9px !important;
+    letter-spacing:.10em !important;
+  }
+  .bs-tag{
+    font-size:10px !important;
+    line-height:1.25 !important;
+    opacity:.86 !important;
+  }
 
-  const inqBrand = document.getElementById('inqBrand');
-  if (inqBrand) inqBrand.addEventListener('change', handleInquiryBrandChange);
-
-  const inqProducts = document.getElementById('inqProducts');
-  if (inqProducts) inqProducts.addEventListener('change', handleInquiryProductsChange);
-
-  window.addEventListener('scroll', () => {
-    const el = document.documentElement;
-    const pct = el.scrollHeight <= el.clientHeight ? 0 : (el.scrollTop / (el.scrollHeight - el.clientHeight)) * 100;
-    const prog = document.getElementById('prog');
-    if (prog) prog.style.width = `${Math.min(pct, 100)}%`;
-    handleBrandSticky();
-  }, { passive: true });
-
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') {
-      if (document.getElementById('modalBg')?.classList.contains('on')) closeModal();
-      else if (document.getElementById('infoModalBg')?.classList.contains('on')) closeInfoModal();
-    }
-  });
-
-  window.addEventListener('popstate', () => {
-    const h = location.hash;
-    if (!h || h === '#') {
-      goP1({ skipPush: true });
-    } else if (h.startsWith('#brand=')) {
-      const bid = h.replace('#brand=', '');
-      if (BM[bid]) goBrand(bid, { skipPush: true });
-      else goP1({ skipPush: true });
-    } else if (h === '#inquiry') {
-      goInquiryGeneral({ skipPush: true });
-    } else {
-      goP1({ skipPush: true });
-    }
-  });
-}
-
-/* =========================
-   INIT
-========================= */
-async function bootstrapCatalog() {
-  showLoadingOverlay('Connecting to catalog data...');
-
-  try {
-    const data = await fetchBrandsAndCompany();
-
-    setLoadingText('Loading brands...');
-    setLoadingProgress(82);
-
-    applyCatalogData(data);
-    initEventBindings();
-    buildP1Filters();
-    renderBrandGrid();
-    renderHeroText();
-
-    setLoadingText('Preparing catalog...');
-    setLoadingProgress(92);
-
-    observeReveals();
-    hideLoadingOverlay();
-    history.replaceState({ page: 'home' }, '', '#');
-  } catch (err) {
-    console.error(err);
-    hideLoadingOverlay();
+  /* Product area comes up sooner */
+  .sku-wrap{
+    padding-top:18px !important;
   }
 }
 
-document.addEventListener('DOMContentLoaded', bootstrapCatalog);
+
+/* Loading */
+.loading-layer{position:fixed;inset:0;background:rgba(255,255,255,.97);backdrop-filter:blur(8px);z-index:9999;display:flex;align-items:center;justify-content:center;transition:opacity .4s ease,visibility .4s ease;}
+.loading-layer.hidden{opacity:0;visibility:hidden;pointer-events:none;}
+.loading-inner{display:flex;flex-direction:column;align-items:center;gap:28px;width:min(360px,calc(100vw - 48px));}
+.loading-logo{font-family:var(--serif);font-size:32px;font-weight:300;letter-spacing:.28em;text-transform:uppercase;color:var(--dark);animation:loadPulse 2.4s ease-in-out infinite;}
+.loading-phrase-wrap{height:20px;display:flex;align-items:center;justify-content:center;}
+.loading-phrase{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mid);transition:opacity .22s ease;text-align:center;}
+.loading-bar-wrap{width:100%;}
+.loading-bar{width:100%;height:1px;background:rgba(0,0,0,.08);overflow:hidden;}
+.loading-bar-fill{width:0%;height:100%;background:var(--dark);transition:width .24s ease;}
+@keyframes loadPulse{0%,100%{opacity:1}50%{opacity:.38}}
+@media(max-width:768px){.loading-inner{width:min(280px,calc(100vw - 32px));}.loading-logo{font-size:24px;}}
+
+/* ===== TARGETED FIXES (appended) ===== */
+/* Fix: inquiry sidebar sticky top aligned with GNB */
+.inquiry-side{top:calc(var(--gnb-h) + 24px)!important}
+/* Fix: SKU grid 2 columns on tablet (481–768px) */
+@media(max-width:768px) and (min-width:481px){
+  .sku-grid{grid-template-columns:repeat(2,1fr)!important}
+}
+/* Fix: modal image max-height on mobile */
+@media(max-width:768px){
+  .mb-img{max-height:220px!important}
+}
+
+/* product description in modal */
+.mb-desc{font-size:14px;color:var(--mid);line-height:1.72;margin-bottom:16px;}
