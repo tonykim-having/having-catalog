@@ -169,10 +169,7 @@ function normalizeBrandsPayload(payload) {
   const filters = [{ id: 'all', label: 'All Brands' }].concat(
     allFilterTags.map(id => ({
       id,
-      label: id
-        .split('-')
-        .map(part => part.charAt(0).toUpperCase() + part.slice(1))
-        .join(' ')
+      label: id.split('-').map(part => part.charAt(0).toUpperCase() + part.slice(1)).join(' ')
     }))
   );
 
@@ -183,11 +180,8 @@ function normalizeCompanyPayload(payload) {
   const c = payload?.company || {};
   return {
     name: asText(pick(c, ['name']), 'HAVING Corp.'),
-    hero_eyebrow: asText(pick(c, ['hero_eyebrow']), 'Curated Brand Portfolio'),
-    hero_title: asText(
-      pick(c, ['hero_title']),
-      'The HAVING<br><em>Selection.</em>'
-    ),
+    hero_eyebrow: asText(pick(c, ['hero_eyebrow'])),
+    hero_title: asText(pick(c, ['hero_title'])),
     email: asText(pick(c, ['email']), 'having@having.co.kr'),
     address: asText(pick(c, ['address']), ''),
     contact_title: asText(pick(c, ['contact_title']), 'Sales Representative'),
@@ -234,10 +228,7 @@ async function loadBrandProducts(brandId) {
   if (!brandId) return [];
   if (PRODUCTS_CACHE[brandId]) return PRODUCTS_CACHE[brandId];
 
-  const payload = await fetchJson(
-    `${PRIMARY_DATA_URL}?type=products&brand_id=${encodeURIComponent(brandId)}`
-  );
-
+  const payload = await fetchJson(`${PRIMARY_DATA_URL}?type=products&brand_id=${encodeURIComponent(brandId)}`);
   const products = normalizeProductsPayload(payload);
   PRODUCTS_CACHE[brandId] = products;
   return products;
@@ -278,8 +269,8 @@ function getAllLoadedProducts() {
 function buildP1Filters() {
   const el = document.getElementById('p1filters');
   if (!el) return;
-  el.innerHTML = FILTERS.map(
-    f => `<button class="pf-chip${f.id === 'all' ? ' on' : ''}" data-filter="${f.id}">${f.label}</button>`
+  el.innerHTML = FILTERS.map(f =>
+    `<button class="pf-chip${f.id === 'all' ? ' on' : ''}" data-filter="${f.id}">${f.label}</button>`
   ).join('');
 }
 
@@ -293,8 +284,8 @@ function setP1Filter(id, btn) {
 function renderHeroText() {
   const eyebrowEl = document.getElementById('heroEyebrow');
   const titleEl = document.getElementById('heroTitle');
-  if (eyebrowEl) eyebrowEl.innerHTML = COMPANY.hero_eyebrow || 'Curated Brand Portfolio';
-  if (titleEl) titleEl.innerHTML = COMPANY.hero_title || 'The HAVING<br><em>Selection.</em>';
+  if (eyebrowEl) eyebrowEl.innerHTML = COMPANY.hero_eyebrow || '';
+  if (titleEl) titleEl.innerHTML = COMPANY.hero_title || '';
 }
 
 function renderBrandGrid() {
@@ -308,26 +299,26 @@ function renderBrandGrid() {
   const root = document.getElementById('brandGrid');
   if (!root) return;
 
-  root.innerHTML = visible.map((bid) => {
+  root.innerHTML = visible.map((bid, i) => {
     const m = BM[bid];
     const hasImage = !!m.listImage;
-    const cls = `brand-card${hasImage ? ' has-image' : ''}`;
+    const cls = `brand-card reveal${hasImage ? ' has-image' : ''}`;
     const style = hasImage ? ` style="--card-bg:url('${m.listImage}')"` : '';
-
     return `
-      <div class="${cls}"${style} data-brand="${bid}">
+      <div class="${cls}"${style} data-delay="${(i % 6) + 1}" data-brand="${bid}">
         <div class="brand-card-body">
+          <div class="bc-num">${String(BORDER.indexOf(bid) + 1).padStart(2, '0')}</div>
           <div class="bc-name">${m.name}</div>
           <div class="bc-tag">${m.tag}</div>
-          <div class="bc-hashtags">
-            ${(m.hashtags || []).map(h => `<span class="bc-hash">${h}</span>`).join('')}
-          </div>
+          <div class="bc-hashtags">${(m.hashtags || []).map(h => `<span class="bc-hash">${h}</span>`).join('')}</div>
         </div>
         <div class="bc-arrow">&#8599;</div>
         <div class="brand-card-edge"></div>
       </div>
     `;
   }).join('');
+
+  observeReveals();
 }
 
 /* =========================
@@ -341,27 +332,15 @@ function getCurrentBrandProducts() {
 
 function renderBrandInfoContent(m) {
   const tone = exclTone(m.exclusivity.status);
-
   return `
     <div class="info-brand">${m.name}</div>
     <div class="info-tag">${m.tag}</div>
     <div class="info-card"><div class="info-label">About</div><div class="info-note">${m.about}</div></div>
     <div class="info-card"><div class="info-label">Channel</div><div class="info-value">${m.channel}</div></div>
     <div class="info-card"><div class="info-label">Total SKUs</div><div class="info-value">${m.totalSku}</div></div>
-    <div class="info-card">
-      <div class="info-label">Supply Mode</div>
-      <div class="info-supply">
-        ${(m.supply || []).map(s => `<span class="info-badge" style="border-color:${m.accent};color:${m.accent}">${s}</span>`).join('')}
-      </div>
-    </div>
+    <div class="info-card"><div class="info-label">Supply Mode</div><div class="info-supply">${(m.supply || []).map(s => `<span class="info-badge" style="border-color:${m.accent};color:${m.accent}">${s}</span>`).join('')}</div></div>
     <div class="info-card"><div class="info-label">Active Markets</div><div class="info-market-list">${renderMarketsChips(m.markets, 'info-chip')}</div></div>
-    <div class="info-card">
-      <div class="info-label">Exclusivity</div>
-      <div class="info-excl">
-        <span class="info-badge" style="border-color:${tone.color};color:${tone.color}">${tone.label}</span>
-        <div class="info-note">${m.exclusivity.note || ''}</div>
-      </div>
-    </div>
+    <div class="info-card"><div class="info-label">Exclusivity</div><div class="info-excl"><span class="info-badge" style="border-color:${tone.color};color:${tone.color}">${tone.label}</span><div class="info-note">${m.exclusivity.note || ''}</div></div></div>
   `;
 }
 
@@ -410,12 +389,9 @@ function renderP2() {
             <div class="p2-name">${m.name}</div>
             <div class="p2-tag">${m.tag}</div>
             <div class="p2-about">${m.about}</div>
-            <div class="bc-hashtags" style="margin-top:16px">
-              ${(m.hashtags || []).map(h => `<span class="bc-hash">${h}</span>`).join('')}
-            </div>
+            <div class="bc-hashtags" style="margin-top:16px">${(m.hashtags || []).map(h => `<span class="bc-hash">${h}</span>`).join('')}</div>
           </div>
         </div>
-
         <div class="p2-meta-col">
           <div class="p2-mc"><div class="p2-mc-lbl">Channel</div><div class="p2-mc-val">${m.channel}</div></div>
           <div class="p2-mc"><div class="p2-mc-lbl">Total SKUs</div><div class="p2-mc-val" style="font-family:var(--serif);font-size:20px;font-weight:300;color:${m.accent}">${m.totalSku}</div></div>
@@ -429,9 +405,7 @@ function renderP2() {
     <div class="sku-wrap">
       <div class="sku-head">
         <div class="sku-title">${m.totalSku} SKUs · showing ${prods.length}</div>
-        <div class="sku-filters">
-          ${(m.filters || ['All']).map(f => `<button class="sfb${currentSkuFilter === f ? ' on' : ''}" data-sf="${f}">${f}</button>`).join('')}
-        </div>
+        <div class="sku-filters">${(m.filters || ['All']).map(f => `<button class="sfb${currentSkuFilter === f ? ' on' : ''}" data-sf="${f}">${f}</button>`).join('')}</div>
       </div>
       <div class="sku-grid" id="skuGrid">${renderSkus(prods, m)}</div>
     </div>
@@ -474,7 +448,6 @@ function setSkuFilter(filter, btn) {
 function lockBodyScroll() {
   scrollLockCount += 1;
   if (scrollLockCount > 1) return;
-
   savedScrollY = window.scrollY || window.pageYOffset || 0;
   document.documentElement.classList.add('modal-open');
   document.body.classList.add('modal-open');
@@ -485,7 +458,6 @@ function unlockBodyScroll() {
   if (scrollLockCount === 0) return;
   scrollLockCount -= 1;
   if (scrollLockCount > 0) return;
-
   const offset = parseInt(document.body.style.top || '0', 10) || 0;
   document.documentElement.classList.remove('modal-open');
   document.body.classList.remove('modal-open');
@@ -561,6 +533,19 @@ function closeModal() {
   }
 }
 
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) entry.target.classList.add('in');
+  });
+}, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
+
+function observeReveals() {
+  document.querySelectorAll('.reveal').forEach(el => {
+    if (el.classList.contains('in')) return;
+    revealObserver.observe(el);
+  });
+}
+
 function handleBrandSticky() {
   const sticky = document.getElementById('brandSticky');
   if (!sticky) return;
@@ -593,7 +578,6 @@ async function getProductsForBrands(brandIds = []) {
 async function updateInquiryProducts(selectedBrands = [], selectedProducts = []) {
   const sel = document.getElementById('inqProducts');
   if (!sel) return;
-
   const prods = await getProductsForBrands(selectedBrands);
   sel.innerHTML = prods.map(p => `<option value="${p.id}">${BM[p.b].name} — ${p.name}</option>`).join('');
   [...sel.options].forEach(opt => {
@@ -604,36 +588,26 @@ async function updateInquiryProducts(selectedBrands = [], selectedProducts = [])
 function updateInquirySummary() {
   const box = document.getElementById('inquirySummary');
   if (!box) return;
-
-  const brandNames = inquiryState.brands.length
-    ? inquiryState.brands.map(id => BM[id]?.name || id).join('<br>')
-    : 'No brand selected';
-
+  const brandNames = inquiryState.brands.length ? inquiryState.brands.map(id => BM[id]?.name || id).join('<br>') : 'No brand selected';
   const productNames = inquiryState.products.length
     ? inquiryState.products.map(id => {
         const p = getAllLoadedProducts().find(x => x.id === id);
         return p ? `${BM[p.b].name} — ${p.name}` : id;
       }).join('<br>')
     : 'No product selected';
-
   box.innerHTML = `<strong>Brands</strong><br>${brandNames}<br><br><strong>Products</strong><br>${productNames}`;
 }
 
 function seedInquiryMessage() {
   const msg = document.getElementById('inqMessage');
   if (!msg) return;
-
-  const brandNames = inquiryState.brands.length
-    ? inquiryState.brands.map(id => BM[id]?.name || id).join(', ')
-    : '';
-
+  const brandNames = inquiryState.brands.length ? inquiryState.brands.map(id => BM[id]?.name || id).join(', ') : '';
   const productNames = inquiryState.products.length
     ? inquiryState.products.map(id => {
         const p = getAllLoadedProducts().find(x => x.id === id);
         return p ? p.name : id;
       }).join(', ')
     : '';
-
   const lines = [];
   if (brandNames) lines.push(`Interested brands: ${brandNames}`);
   if (productNames) lines.push(`Interested products: ${productNames}`);
@@ -666,12 +640,8 @@ function handleInquiryProductsChange() {
 async function renderInquiryPage() {
   const brandSel = document.getElementById('inqBrand');
   if (!brandSel) return;
-
   brandSel.innerHTML = getBrandOptions();
-  [...brandSel.options].forEach(opt => {
-    opt.selected = inquiryState.brands.includes(opt.value);
-  });
-
+  [...brandSel.options].forEach(opt => { opt.selected = inquiryState.brands.includes(opt.value); });
   await updateInquiryProducts(inquiryState.brands, inquiryState.products);
   updateInquirySummary();
   seedInquiryMessage();
@@ -696,7 +666,6 @@ function clearFormStatus() {
 function goInquiryGeneral(opts = {}) {
   closeModal();
   closeInfoModal();
-
   document.getElementById('p1')?.classList.remove('on');
   document.getElementById('p2')?.classList.remove('on');
   document.getElementById('p3')?.classList.add('on');
@@ -729,7 +698,6 @@ async function goInquiryProduct(pid) {
     p = (PRODUCTS_CACHE[currentBrand] || []).find(x => x.id === pid);
   }
   if (!p) return;
-
   inquiryState.brands = [p.b];
   inquiryState.products = [pid];
   closeModal();
@@ -768,16 +736,10 @@ function submitInquiry(e) {
   clearFormStatus();
 
   const payload = {
-    company,
-    email,
-    phone,
-    region,
-    brand_ids: brandIds,
-    brand_names: brandNames,
-    product_ids: productIds,
-    product_names: productNames,
-    message,
-    source: 'web_catalog'
+    company, email, phone, region,
+    brand_ids: brandIds, brand_names: brandNames,
+    product_ids: productIds, product_names: productNames,
+    message, source: 'web_catalog'
   };
 
   fetch(INQUIRY_URL, {
@@ -789,16 +751,23 @@ function submitInquiry(e) {
       let json = {};
       try { json = await res.json(); } catch (_) {}
       if (!res.ok || json.ok === false) throw new Error(json.error || `HTTP ${res.status}`);
-
       document.getElementById('inquiryForm').reset();
       inquiryState.brands = [];
       inquiryState.products = [];
       renderInquiryPage();
-      setFormStatus('Inquiry sent successfully.', 'success');
+      if (document.getElementById('inquiryStatus')) {
+        setFormStatus('Inquiry sent successfully.', 'success');
+      } else {
+        alert('Inquiry sent successfully.');
+      }
     })
     .catch(err => {
       console.error(err);
-      setFormStatus('Inquiry sending failed. Please try again.', 'error');
+      if (document.getElementById('inquiryStatus')) {
+        setFormStatus('Inquiry sending failed. Please try again.', 'error');
+      } else {
+        alert('Inquiry sending failed. Please try again.');
+      }
     })
     .finally(() => {
       if (submitBtn) {
@@ -837,20 +806,14 @@ async function goBrand(bid, opts = {}) {
 
   try {
     await loadBrandProducts(bid);
-
     setLoadingText('Loading products...');
     setLoadingProgress(84);
-
     renderP2();
-
     setLoadingText('Preparing brand page...');
     setLoadingProgress(94);
-
     window.scrollTo(0, 0);
     handleBrandSticky();
-
     if (!opts.skipPush) history.pushState({ page: 'brand', bid }, '', `#brand=${bid}`);
-
     hideLoadingOverlay();
   } catch (err) {
     console.error(err);
@@ -948,10 +911,7 @@ function initEventBindings() {
 
   window.addEventListener('scroll', () => {
     const el = document.documentElement;
-    const pct =
-      el.scrollHeight <= el.clientHeight
-        ? 0
-        : (el.scrollTop / (el.scrollHeight - el.clientHeight)) * 100;
+    const pct = el.scrollHeight <= el.clientHeight ? 0 : (el.scrollTop / (el.scrollHeight - el.clientHeight)) * 100;
     const prog = document.getElementById('prog');
     if (prog) prog.style.width = `${Math.min(pct, 100)}%`;
     handleBrandSticky();
@@ -1001,6 +961,7 @@ async function bootstrapCatalog() {
     setLoadingText('Preparing catalog...');
     setLoadingProgress(92);
 
+    observeReveals();
     hideLoadingOverlay();
     history.replaceState({ page: 'home' }, '', '#');
   } catch (err) {
@@ -1009,4 +970,4 @@ async function bootstrapCatalog() {
   }
 }
 
-bootstrapCatalog();
+document.addEventListener('DOMContentLoaded', bootstrapCatalog);
