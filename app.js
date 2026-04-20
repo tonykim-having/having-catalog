@@ -283,8 +283,9 @@ function setP1Filter(id, btn) {
 function renderHeroText() {
   const eyebrowEl = document.getElementById('heroEyebrow');
   const titleEl = document.getElementById('heroTitle');
-  if (eyebrowEl) eyebrowEl.innerHTML = COMPANY.hero_eyebrow || '';
-  if (titleEl) titleEl.innerHTML = COMPANY.hero_title || '';
+  // Use API value if present, otherwise restore hardcoded fallback
+  if (eyebrowEl) eyebrowEl.innerHTML = COMPANY.hero_eyebrow || 'Selected for Distribution';
+  if (titleEl) titleEl.innerHTML = COMPANY.hero_title || 'The HAVING<br><em>Selection.</em>';
 }
 
 function renderBrandGrid() {
@@ -301,7 +302,7 @@ function renderBrandGrid() {
   root.innerHTML = visible.map((bid, i) => {
     const m = BM[bid];
     const hasImage = !!m.listImage;
-    const cls = `brand-card reveal${hasImage ? ' has-image' : ''}`;
+    const cls = `brand-card reveal in${hasImage ? ' has-image' : ''}`;
     const style = hasImage ? ` style="--card-bg:url('${m.listImage}')"` : '';
     return `
       <div class="${cls}"${style} data-delay="${(i % 6) + 1}" data-brand="${bid}">
@@ -871,6 +872,8 @@ function goP1(opts = {}) {
   if (prog) prog.style.background = 'var(--dark)';
 
   document.getElementById('brandSticky')?.classList.remove('on');
+  renderHeroText();
+  renderBrandGrid();
   window.scrollTo(0, 0);
 
   if (!opts.skipPush) history.pushState({ page: 'home' }, '', '#');
