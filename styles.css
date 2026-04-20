@@ -58,7 +58,12 @@ html.modal-open{overflow:hidden}
 .pf-chip.on{background:var(--dark);color:#fff;border-color:var(--dark)}
 
 /* BRAND CARDS */
-.brand-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:0;padding:0 var(--page-pad)}
+.brand-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:0;
+  padding:0 var(--page-pad) 80px;
+}
 .brand-card{
   border-bottom:1px solid var(--border);border-right:1px solid var(--border);
   cursor:pointer;transition:border-color 0.22s,transform 0.22s,color 0.22s;
@@ -99,7 +104,7 @@ html.modal-open{overflow:hidden}
 .brand-card.has-image .brand-card-body *{text-shadow:0 1px 8px rgba(0,0,0,.20)}
 @media(max-width:768px){
   .gnb-logo img{height:54px}
-  .brand-grid{padding:0 var(--page-pad)}
+  .brand-grid{padding:0 var(--page-pad) 56px}
   .brand-card-body{padding:24px 24px 22px;max-width:100%}
   .footer-top{flex-direction:column;gap:18px}
 }
@@ -151,7 +156,12 @@ html.modal-open{overflow:hidden}
 .sfb:hover{border-color:var(--dark);color:var(--dark)}
 .sfb.on{background:var(--dark);color:#fff;border-color:var(--dark)}
 
-.sku-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border)}
+.sku-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:1px;
+  background:#fff;
+}
 .sku-card{background:#fff;cursor:pointer;transition:background 0.15s;position:relative;display:flex;flex-direction:column}
 .sku-card:hover{background:var(--light)}
 .sku-img{width:100%;aspect-ratio:1;background:var(--light);border-bottom:1px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;position:relative}
@@ -446,7 +456,7 @@ html.modal-open{overflow:hidden}
 }
 
 @media(max-width:768px){
-    .footer{padding:36px var(--page-pad) 44px}
+  .footer{padding:36px var(--page-pad) 44px}
   .footer-top{flex-direction:column;gap:18px}
   .footer-desc,.footer-v,.footer-v a{font-size:14px;line-height:1.7}
   .footer-k{font-size:11px}
