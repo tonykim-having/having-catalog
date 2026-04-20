@@ -521,7 +521,7 @@ function openModal(id) {
     body.innerHTML = `
       <div class="mb-inner">
         <div class="mb-img">
-          ${p.img ? `<img src="${p.img}" alt="${p.name}" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:contain;display:block;max-height:320px;">` : ''}
+          ${p.img ? `<img src="${p.img}" alt="${p.name}" loading="lazy" decoding="async">` : ''}
           <span class="mb-img-id">${p.id}</span>
         </div>
         <div class="mb-info">
