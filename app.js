@@ -228,7 +228,10 @@ async function loadBrandProducts(brandId) {
   if (PRODUCTS_CACHE[brandId]) return PRODUCTS_CACHE[brandId];
 
   const payload = await fetchJson(`${PRIMARY_DATA_URL}?type=products&brand_id=${encodeURIComponent(brandId)}`);
-  const products = normalizeProductsPayload(payload);
+  const allProducts = normalizeProductsPayload(payload);
+
+  // Always client-side filter by brandId — guards against APIs that return all products
+  const products = allProducts.filter(p => p.b === brandId);
   PRODUCTS_CACHE[brandId] = products;
   return products;
 }
