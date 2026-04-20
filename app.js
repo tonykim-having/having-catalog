@@ -1,4 +1,3 @@
-
 const PRIMARY_DATA_URL =
   window.CATALOG_DATA_URL ||
   'https://script.google.com/macros/s/AKfycbxg937uz2NriahqW40S_SKxiFksqgyMjDA3js-500sRKVIGFg_9qVsKlRwk-VN34SsTyA/exec';
@@ -151,7 +150,7 @@ function normalizeBrandsPayload(payload) {
       filterTags: uniq(rawFilters.map(slugify).filter(Boolean)),
       supply: supply.length ? supply : ['Brand Supply'],
       channel: asText(pick(row, ['channel', 'target_channel'])),
-      totalSku: asNumber(pick(row, ['total_sku']), 0),
+      totalSku: asNumber(pick(row, ['total_sku', 'sku_count', 'skuCount']), null),
       filters: uniq(['All', ...rawFilters]).filter(Boolean),
       markets,
       exclusivity: {
@@ -332,12 +331,16 @@ function getCurrentBrandProducts() {
 
 function renderBrandInfoContent(m) {
   const tone = exclTone(m.exclusivity.status);
+  const cachedProds = PRODUCTS_CACHE[m.brand_id] || [];
+  const displaySku = cachedProds.length > 0
+    ? cachedProds.length
+    : (m.totalSku != null && m.totalSku > 0 ? m.totalSku : 0);
   return `
     <div class="info-brand">${m.name}</div>
     <div class="info-tag">${m.tag}</div>
     <div class="info-card"><div class="info-label">About</div><div class="info-note">${m.about}</div></div>
     <div class="info-card"><div class="info-label">Channel</div><div class="info-value">${m.channel}</div></div>
-    <div class="info-card"><div class="info-label">Total SKUs</div><div class="info-value">${m.totalSku}</div></div>
+    <div class="info-card"><div class="info-label">Total SKUs</div><div class="info-value">${displaySku}</div></div>
     <div class="info-card"><div class="info-label">Supply Mode</div><div class="info-supply">${(m.supply || []).map(s => `<span class="info-badge" style="border-color:${m.accent};color:${m.accent}">${s}</span>`).join('')}</div></div>
     <div class="info-card"><div class="info-label">Active Markets</div><div class="info-market-list">${renderMarketsChips(m.markets, 'info-chip')}</div></div>
     <div class="info-card"><div class="info-label">Exclusivity</div><div class="info-excl"><span class="info-badge" style="border-color:${tone.color};color:${tone.color}">${tone.label}</span><div class="info-note">${m.exclusivity.note || ''}</div></div></div>
@@ -372,7 +375,19 @@ function renderP2() {
   const m = BM[currentBrand];
   if (!m) return;
 
+  // All products for this brand (unfiltered), used for type extraction and count
+  const allBrandProds = PRODUCTS_CACHE[currentBrand] || [];
   const prods = getCurrentBrandProducts();
+
+  // Compute real SKU count: prefer loaded product count, fall back to totalSku field if >0
+  const realSkuCount = allBrandProds.length > 0
+    ? allBrandProds.length
+    : (m.totalSku != null && m.totalSku > 0 ? m.totalSku : 0);
+
+  // Build SKU type filter options from actual loaded products
+  const skuTypes = uniq(allBrandProds.map(p => p.type).filter(Boolean));
+  const skuFilterOptions = ['All', ...skuTypes];
+
   const heroStyle = m.bgImage
     ? `border-top:3px solid ${m.accent};background-image:linear-gradient(to right,rgba(255,255,255,.96),rgba(255,255,255,.90)),url('${m.bgImage}');background-size:cover;background-position:center;`
     : `border-top:3px solid ${m.accent};background:#fff;`;
@@ -394,7 +409,7 @@ function renderP2() {
         </div>
         <div class="p2-meta-col">
           <div class="p2-mc"><div class="p2-mc-lbl">Channel</div><div class="p2-mc-val">${m.channel}</div></div>
-          <div class="p2-mc"><div class="p2-mc-lbl">Total SKUs</div><div class="p2-mc-val" style="font-family:var(--serif);font-size:20px;font-weight:300;color:${m.accent}">${m.totalSku}</div></div>
+          <div class="p2-mc"><div class="p2-mc-lbl">Total SKUs</div><div class="p2-mc-val" style="font-family:var(--serif);font-size:20px;font-weight:300;color:${m.accent}">${realSkuCount}</div></div>
           <div class="p2-mc"><div class="p2-mc-lbl">Supply Mode</div><div class="p2-supply">${(m.supply || []).map(s => `<span class="p2-sbadge" style="border-color:${m.accent};color:${m.accent}">${s}</span>`).join('')}</div></div>
           <div class="p2-mc"><div class="p2-mc-lbl">Active Markets</div><div class="p2-market-list">${renderMarketsChips(m.markets, 'p2-market-chip')}</div></div>
           <div class="p2-mc"><div class="p2-mc-lbl">Exclusivity</div><div class="p2-excl"><span class="p2-excl-badge" style="border-color:${exclTone(m.exclusivity.status).color};color:${exclTone(m.exclusivity.status).color}">${exclTone(m.exclusivity.status).label}</span><span class="p2-excl-note">${m.exclusivity.note || ''}</span></div></div>
@@ -404,8 +419,8 @@ function renderP2() {
 
     <div class="sku-wrap">
       <div class="sku-head">
-        <div class="sku-title">${m.totalSku} SKUs · showing ${prods.length}</div>
-        <div class="sku-filters">${(m.filters || ['All']).map(f => `<button class="sfb${currentSkuFilter === f ? ' on' : ''}" data-sf="${f}">${f}</button>`).join('')}</div>
+        <div class="sku-title">${realSkuCount} SKUs · showing ${prods.length}</div>
+        <div class="sku-filters">${skuFilterOptions.map(f => `<button class="sfb${currentSkuFilter === f ? ' on' : ''}" data-sf="${f}">${f}</button>`).join('')}</div>
       </div>
       <div class="sku-grid" id="skuGrid">${renderSkus(prods, m)}</div>
     </div>
@@ -426,7 +441,7 @@ function renderP2() {
 
   if (bsName) bsName.textContent = m.name;
   if (bsTag) bsTag.textContent = m.tag;
-  if (bsSkuChip) bsSkuChip.textContent = `${m.totalSku} SKUs`;
+  if (bsSkuChip) bsSkuChip.textContent = `${realSkuCount} SKUs`;
   if (bsInquireBtn) {
     bsInquireBtn.style.background = m.accent;
     bsInquireBtn.dataset.brand = currentBrand;
@@ -438,8 +453,15 @@ function setSkuFilter(filter, btn) {
   document.querySelectorAll('.sfb').forEach(b => b.classList.remove('on'));
   if (btn) btn.classList.add('on');
   const m = BM[currentBrand];
+  const filtered = getCurrentBrandProducts();
+  const allBrandProds = PRODUCTS_CACHE[currentBrand] || [];
+  const realSkuCount = allBrandProds.length > 0
+    ? allBrandProds.length
+    : (m.totalSku != null && m.totalSku > 0 ? m.totalSku : 0);
   const grid = document.getElementById('skuGrid');
-  if (grid) grid.innerHTML = renderSkus(getCurrentBrandProducts(), m);
+  if (grid) grid.innerHTML = renderSkus(filtered, m);
+  const title = document.querySelector('.sku-title');
+  if (title) title.textContent = `${realSkuCount} SKUs · showing ${filtered.length}`;
 }
 
 /* =========================
