@@ -176,7 +176,9 @@ function normalizeBrandsPayload(payload) {
 }
 
 function normalizeCompanyPayload(payload) {
-  const c = payload?.company || {};
+  // company can be an array (GAS returns rows as array) or an object
+  const raw = payload?.company;
+  const c = Array.isArray(raw) ? (raw[0] || {}) : (raw || {});
   return {
     name: asText(pick(c, ['name']), 'HAVING Corp.'),
     hero_eyebrow: asText(pick(c, ['hero_eyebrow'])),
@@ -216,8 +218,6 @@ async function fetchBrandsAndCompany() {
     fetchJson(`${PRIMARY_DATA_URL}?type=brands`),
     fetchJson(`${PRIMARY_DATA_URL}?type=company`)
   ]);
-
-  console.log('[HAVING DEBUG] raw companyPayload:', JSON.stringify(companyPayload));
 
   return {
     ...normalizeBrandsPayload(brandsPayload),
@@ -285,8 +285,8 @@ function setP1Filter(id, btn) {
 function renderHeroText() {
   const eyebrowEl = document.getElementById('heroEyebrow');
   const titleEl = document.getElementById('heroTitle');
-  if (eyebrowEl && COMPANY.hero_eyebrow) eyebrowEl.textContent = COMPANY.hero_eyebrow;
-  if (titleEl && COMPANY.hero_title) titleEl.textContent = COMPANY.hero_title;
+  if (eyebrowEl && COMPANY.hero_eyebrow) eyebrowEl.innerHTML = COMPANY.hero_eyebrow;
+  if (titleEl && COMPANY.hero_title) titleEl.innerHTML = COMPANY.hero_title;
 }
 
 function renderBrandGrid() {
