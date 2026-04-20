@@ -228,10 +228,7 @@ async function loadBrandProducts(brandId) {
   if (PRODUCTS_CACHE[brandId]) return PRODUCTS_CACHE[brandId];
 
   const payload = await fetchJson(`${PRIMARY_DATA_URL}?type=products&brand_id=${encodeURIComponent(brandId)}`);
-  const allProducts = normalizeProductsPayload(payload);
-
-  // Always client-side filter by brandId — guards against APIs that return all products
-  const products = allProducts.filter(p => p.b === brandId);
+  const products = normalizeProductsPayload(payload).filter(p => p.b === brandId);
   PRODUCTS_CACHE[brandId] = products;
   return products;
 }
@@ -328,8 +325,9 @@ function renderBrandGrid() {
 ========================= */
 function getCurrentBrandProducts() {
   const list = PRODUCTS_CACHE[currentBrand] || [];
-  if (currentSkuFilter === 'All') return list;
-  return list.filter(p => p.type === currentSkuFilter);
+  return list
+    .filter(p => p.b === currentBrand)
+    .filter(p => currentSkuFilter === 'All' ? true : p.type === currentSkuFilter);
 }
 
 function renderBrandInfoContent(m) {
@@ -830,6 +828,14 @@ async function goBrand(bid, opts = {}) {
   if (prog) prog.style.background = m.accent;
 
   try {
+    const root = document.getElementById('p2c');
+    if (root) {
+      root.innerHTML = `
+        <div class="sku-wrap">
+          <div style="padding:48px 0;text-align:center;font-size:13px;color:var(--mid)">Loading products...</div>
+        </div>
+      `;
+    }
     await loadBrandProducts(bid);
     setLoadingText('Loading products...');
     setLoadingProgress(84);
