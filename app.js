@@ -283,9 +283,8 @@ function setP1Filter(id, btn) {
 function renderHeroText() {
   const eyebrowEl = document.getElementById('heroEyebrow');
   const titleEl = document.getElementById('heroTitle');
-  // Use API value if present, otherwise restore hardcoded fallback
-  if (eyebrowEl) eyebrowEl.innerHTML = COMPANY.hero_eyebrow || 'Selected for Distribution';
-  if (titleEl) titleEl.innerHTML = COMPANY.hero_title || 'The HAVING<br><em>Selection.</em>';
+  if (eyebrowEl && COMPANY.hero_eyebrow) eyebrowEl.textContent = COMPANY.hero_eyebrow;
+  if (titleEl && COMPANY.hero_title) titleEl.textContent = COMPANY.hero_title;
 }
 
 function renderBrandGrid() {
