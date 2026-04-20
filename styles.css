@@ -63,7 +63,7 @@ html.modal-open{overflow:hidden}
   border-bottom:1px solid var(--border);border-right:1px solid var(--border);
   cursor:pointer;transition:border-color 0.22s,transform 0.22s,color 0.22s;
   position:relative;overflow:hidden;display:flex;align-items:flex-end;
-  aspect-ratio:4/3;min-height:300px;background:#fff;color:var(--dark);
+  aspect-ratio:16/7;min-height:220px;background:#fff;color:var(--dark);
 }
 .brand-card:nth-child(2n){border-right:none}
 .brand-card.has-image::before{
@@ -80,6 +80,7 @@ html.modal-open{overflow:hidden}
 .brand-card.has-image .brand-card-body{color:#fff}
 .brand-card:not(.has-image) .brand-card-body{color:var(--dark)}
 .brand-card:not(.has-image):hover{background:var(--light)}
+.brand-card:not(.has-image){align-items:flex-start}
 .brand-card-edge{position:absolute;bottom:0;left:0;height:2px;width:0;background:var(--dark);transition:width .3s;z-index:3}
 .brand-card:hover .brand-card-edge{width:100%}
 
@@ -342,7 +343,7 @@ html.modal-open{overflow:hidden}
   .p1-title{font-size:36px}
   .p1-filters{padding:14px var(--page-pad);top:var(--gnb-h)}
   .brand-grid{grid-template-columns:1fr}
-  .brand-card{border-right:none;aspect-ratio:3/2;min-height:240px}
+  .brand-card{border-right:none;aspect-ratio:16/9;min-height:180px}
   .brand-card:nth-child(2n){border-right:none}
   .p2-hero{padding:32px var(--page-pad) 24px}
   .p2-top{flex-direction:column;gap:24px}
