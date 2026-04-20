@@ -679,3 +679,32 @@ html.modal-open{overflow:hidden}
 
 /* product description in modal */
 .mb-desc{font-size:14px;color:var(--mid);line-height:1.72;margin-bottom:16px;}
+
+
+/* append this at the very end of existing styles.css */
+
+.brand-card{
+  aspect-ratio: 1 / 0.78;
+  min-height: 320px;
+}
+
+.brand-card.has-image::before{
+  background-position:center center;
+}
+
+.brand-card-body{
+  max-width:72%;
+}
+
+@media(max-width:1024px){
+  .brand-card-body{
+    max-width:78%;
+  }
+}
+
+@media(max-width:768px){
+  .brand-card{
+    aspect-ratio: 1 / 1.02;
+    min-height: 300px;
+  }
+}
