@@ -217,6 +217,8 @@ async function fetchBrandsAndCompany() {
     fetchJson(`${PRIMARY_DATA_URL}?type=company`)
   ]);
 
+  console.log('[HAVING DEBUG] raw companyPayload:', JSON.stringify(companyPayload));
+
   return {
     ...normalizeBrandsPayload(brandsPayload),
     COMPANY: normalizeCompanyPayload(companyPayload)
