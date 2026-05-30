@@ -8,81 +8,331 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
+<style>
+/* ─── COLLAPSED CONTACT ─── */
+.contact-body {
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.35s ease;
+}
+.contact-body.open {
+  max-height: 600px;
+}
+
+.card-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  text-align: left;
+}
+
+.toggle-chevron {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.3s ease;
+}
+.toggle-chevron svg {
+  width: 14px;
+  height: 14px;
+  stroke: #888;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.contact-card.open .toggle-chevron {
+  transform: rotate(180deg);
+}
+
+/* ─── MINIMAL OVERRIDES ─── */
+/* Strip shadows, reduce noise, b&w base */
+body { background: #fff; }
+
+.header {
+  border-bottom: 1px solid #e8e8e0;
+  background: #fff;
+  padding: 14px 24px;
+}
+.header-left { color: #aaa; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; }
+
+.logo { color: #1a1a18; font-size: 17px; }
+.logo-dot { background: #E87722; width: 5px; height: 5px; }
+
+/* Hero — tighter, cleaner */
+.hero {
+  padding: 48px 24px 32px;
+  text-align: center;
+  max-width: 480px;
+  margin: 0 auto;
+}
+.exhibit-badge {
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  border: 1px solid #e8e8e0;
+  color: #aaa;
+  border-radius: 2px;
+  padding: 4px 10px;
+  margin-bottom: 28px;
+  display: inline-block;
+}
+.hero-title {
+  font-family: 'Libre Baskerville', Georgia, serif;
+  font-size: clamp(38px, 10vw, 54px);
+  font-weight: 700;
+  color: #1a1a18;
+  line-height: 1.0;
+  letter-spacing: -0.02em;
+  margin-bottom: 6px;
+}
+.hero-title .accent { color: #E87722; font-style: italic; font-weight: 400; }
+.hero-year {
+  font-family: 'Libre Baskerville', Georgia, serif;
+  font-size: 18px;
+  font-weight: 400;
+  font-style: italic;
+  color: #aaa;
+  margin-bottom: 28px;
+  letter-spacing: 0.08em;
+}
+.divider-rule { width: 32px; height: 1px; background: #e8e8e0; margin: 0 auto 24px; }
+.hero-desc { font-size: 13.5px; line-height: 1.75; color: #72726a; }
+.hero-desc .vn {
+  display: block;
+  margin-top: 10px;
+  font-size: 12px;
+  color: #bbb;
+  border-top: 1px solid #f0f0ea;
+  padding-top: 10px;
+  font-style: italic;
+}
+
+/* Catalog buttons — ultra clean */
+.catalog-section {
+  padding: 0 24px 8px;
+  max-width: 480px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.btn-pdf {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px;
+  background: #fff;
+  border: 1px solid #e8e8e0;
+  border-radius: 4px;
+  text-decoration: none;
+  transition: border-color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn-pdf:active { border-color: #E87722; }
+.btn-pdf-inner { display: flex; align-items: center; gap: 12px; }
+.btn-pdf-icon {
+  width: 32px; height: 32px;
+  border: 1px solid #e8e8e0;
+  border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  background: #fafaf8;
+  flex-shrink: 0;
+}
+.btn-pdf-icon svg { width: 14px; height: 14px; stroke: #E87722; fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.btn-pdf-label { font-family: 'Libre Baskerville', Georgia, serif; font-size: 15px; font-weight: 700; color: #1a1a18; display: block; line-height: 1.1; }
+.btn-pdf-sub { font-size: 10.5px; color: #aaa; margin-top: 2px; display: block; letter-spacing: 0.02em; }
+.btn-arrow { width: 26px; height: 26px; border: 1px solid #e8e8e0; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.btn-arrow svg { width: 11px; height: 11px; stroke: #bbb; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+.btn-cta {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 18px;
+  background: #1a1a18;
+  border: 1px solid #1a1a18;
+  border-radius: 4px;
+  cursor: pointer; width: 100%;
+  transition: opacity 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn-cta:active { opacity: 0.85; }
+.btn-cta-inner { display: flex; align-items: center; gap: 12px; }
+.btn-cta-icon {
+  width: 32px; height: 32px;
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.btn-cta-icon svg { width: 14px; height: 14px; stroke: #fff; fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.btn-cta-label { font-family: 'Libre Baskerville', Georgia, serif; font-size: 15px; font-weight: 700; color: #fff; display: block; line-height: 1.1; }
+.btn-cta-sub { font-size: 10.5px; color: rgba(255,255,255,0.45); margin-top: 2px; display: block; }
+.btn-cta .btn-arrow { border-color: rgba(255,255,255,0.15); }
+.btn-cta .btn-arrow svg { stroke: rgba(255,255,255,0.5); }
+
+/* Section header */
+.section-header {
+  padding: 44px 24px 0;
+  max-width: 480px;
+  margin: 0 auto;
+}
+.section-label { font-size: 8px; letter-spacing: 0.3em; text-transform: uppercase; color: #E87722; font-weight: 700; margin-bottom: 5px; }
+.section-title { font-family: 'Libre Baskerville', Georgia, serif; font-size: 22px; font-weight: 700; color: #1a1a18; letter-spacing: -0.01em; }
+
+/* Contact cards — collapsible, minimal */
+.contacts {
+  padding: 16px 24px 0;
+  max-width: 480px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.contact-card {
+  border: 1px solid #e8e8e0;
+  border-radius: 4px;
+  background: #fff;
+  overflow: hidden;
+}
+.contact-card.open { border-color: #d0d0c5; }
+
+/* Toggle header */
+.card-toggle-left { display: flex; align-items: center; gap: 12px; }
+.avatar {
+  width: 36px; height: 36px;
+  border: 1px solid #e8e8e0;
+  border-radius: 3px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Libre Baskerville', Georgia, serif;
+  font-size: 11px; font-weight: 700;
+  color: #1a1a18;
+  background: #fafaf8;
+  flex-shrink: 0;
+  letter-spacing: 0.02em;
+}
+.card-name { font-family: 'Libre Baskerville', Georgia, serif; font-size: 16px; font-weight: 700; color: #1a1a18; line-height: 1.1; }
+.card-role { font-size: 10.5px; color: #aaa; margin-top: 2px; letter-spacing: 0.02em; }
+
+/* Scope row */
+.card-scope {
+  padding: 10px 20px 10px;
+  border-top: 1px solid #f0f0ea;
+  display: flex; flex-wrap: wrap; gap: 5px;
+}
+.scope-tag {
+  font-size: 9.5px; letter-spacing: 0.05em;
+  color: #888;
+  border: 1px solid #e8e8e0;
+  border-radius: 2px;
+  padding: 3px 8px;
+  background: #fff;
+}
+
+/* Action buttons */
+.card-actions { padding: 10px 16px 14px; display: flex; flex-direction: column; gap: 6px; }
+.action-btn {
+  display: flex; align-items: center; gap: 9px;
+  padding: 11px 14px;
+  border-radius: 3px;
+  text-decoration: none;
+  font-size: 12.5px;
+  font-weight: 500;
+  border: 1px solid #e8e8e0;
+  background: #fff;
+  color: #1a1a18;
+  cursor: pointer; width: 100%; text-align: left;
+  transition: border-color 0.12s;
+  -webkit-tap-highlight-color: transparent;
+}
+.action-btn:active { border-color: #bbb; }
+.action-btn svg { width: 14px; height: 14px; flex-shrink: 0; fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; stroke: #aaa; }
+
+.action-btn.whatsapp { border-color: #c5e0bf; background: #f4fbf5; color: #1a5c2e; }
+.action-btn.whatsapp svg { stroke: #5DB075; }
+
+.action-btn.vcard { background: #1a1a18; border-color: #1a1a18; color: #fff; }
+.action-btn.vcard svg { stroke: rgba(255,255,255,0.6); }
+
+/* Footer note */
+.footer-note {
+  margin: 36px 24px 0;
+  max-width: 480px;
+  margin-left: auto; margin-right: auto;
+  border-top: 1px solid #e8e8e0;
+  padding-top: 20px;
+}
+.footer-note p { font-size: 12px; color: #aaa; line-height: 1.7; }
+.footer-note p + p { margin-top: 8px; }
+.footer-note .vn { display: block; font-size: 11px; color: #ccc; font-style: italic; margin-top: 2px; }
+
+/* Footer */
+.site-footer {
+  margin-top: 40px;
+  background: #1a1a18;
+  padding: 28px 24px 48px;
+  text-align: center;
+}
+.footer-logo { font-family: 'Libre Baskerville', Georgia, serif; font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 8px; letter-spacing: -0.01em; }
+.footer-meta { font-size: 10.5px; color: rgba(255,255,255,0.3); letter-spacing: 0.06em; line-height: 2; }
+.footer-meta a { color: rgba(255,255,255,0.4); text-decoration: none; }
+</style>
 </head>
 <body>
 
-<!-- HEADER — logo top-right (brand rule) -->
 <header class="header">
   <span class="header-left">Vietnam 2026</span>
-  <a class="logo" href="#">
-    Having<span class="logo-dot"></span>
-  </a>
+  <a class="logo" href="#">Having<span class="logo-dot"></span></a>
 </header>
 
-<!-- HERO -->
 <section class="hero">
   <div class="exhibit-badge">K-Beauty · Exhibition</div>
-
-  <h1 class="hero-title">
-    HAVING<br>
-    <span class="accent">Vietnam</span>
-  </h1>
+  <h1 class="hero-title">HAVING<br><span class="accent">Vietnam</span></h1>
   <p class="hero-year">2026</p>
-
   <div class="divider-rule"></div>
-
   <p class="hero-desc">
     Explore HAVING's selected K-Beauty portfolio for Vietnam 2026.
     Choose your preferred catalog or contact the right person directly.
-    <span class="vn">
-      Khám phá danh mục K-Beauty được tuyển chọn của HAVING cho Vietnam 2026.
-      Vui lòng chọn catalog hoặc liên hệ trực tiếp với người phụ trách.
-    </span>
+    <span class="vn">Khám phá danh mục K-Beauty được tuyển chọn của HAVING cho Vietnam 2026.
+    Vui lòng chọn catalog hoặc liên hệ trực tiếp với người phụ trách.</span>
   </p>
 </section>
 
-<!-- CATALOG BUTTONS -->
 <div class="catalog-section">
-
-  <a class="btn-pdf"
-     href="files/having-catalog-2026-en.pdf.pdf"
-     target="_blank"
-     rel="noopener noreferrer">
+  <a class="btn-pdf" href="files/having-catalog-2026-en.pdf.pdf" target="_blank" rel="noopener noreferrer">
     <div class="btn-pdf-inner">
       <div class="btn-pdf-icon">
         <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
       </div>
-      <div class="btn-pdf-text">
+      <div>
         <span class="btn-pdf-label">English Catalog</span>
         <span class="btn-pdf-sub">View PDF · 2026 Edition</span>
       </div>
     </div>
-    <div class="btn-arrow">
-      <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-    </div>
+    <div class="btn-arrow"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
   </a>
 
-  <a class="btn-pdf"
-     href="files/having-catalog-2026-vn.pdf.pdf"
-     target="_blank"
-     rel="noopener noreferrer">
+  <a class="btn-pdf" href="files/having-catalog-2026-vn.pdf.pdf" target="_blank" rel="noopener noreferrer">
     <div class="btn-pdf-inner">
       <div class="btn-pdf-icon">
         <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
       </div>
-      <div class="btn-pdf-text">
+      <div>
         <span class="btn-pdf-label">Vietnamese Catalog</span>
         <span class="btn-pdf-sub">Xem Catalog tiếng Việt · 2026</span>
       </div>
     </div>
-    <div class="btn-arrow">
-      <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-    </div>
+    <div class="btn-arrow"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
   </a>
 
-  <!-- CTA — only filled orange (brand rule) -->
-  <button class="btn-cta"
-          onclick="document.getElementById('contact').scrollIntoView({behavior:'smooth'})">
+  <button class="btn-cta" onclick="toggleContact()">
     <div class="btn-cta-inner">
       <div class="btn-cta-icon">
         <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -92,14 +342,10 @@
         <span class="btn-cta-sub">Finished Goods · Raw Materials</span>
       </div>
     </div>
-    <div class="btn-arrow">
-      <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
-    </div>
+    <div class="btn-arrow"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
   </button>
-
 </div>
 
-<!-- CONTACT SECTION -->
 <section id="contact">
   <div class="section-header">
     <div class="section-label">Direct Contact</div>
@@ -108,102 +354,116 @@
 
   <div class="contacts">
 
-    <!-- Tony Kim — Finished Goods -->
-    <div class="contact-card">
-      <div class="card-stripe"></div>
-      <div class="card-head">
-        <div class="avatar">TK</div>
-        <div class="card-identity">
-          <div class="card-name">Tony Kim</div>
-          <div class="card-role">Overseas Sales · HAVING Corp.</div>
+    <!-- James Choi — Raw Materials (위) -->
+    <div class="contact-card" id="card-james">
+      <button class="card-toggle" onclick="toggleCard('james')">
+        <div class="card-toggle-left">
+          <div class="avatar">JC</div>
+          <div>
+            <div class="card-name">James Choi</div>
+            <div class="card-role">CEO · HAVING Corp.</div>
+          </div>
         </div>
-      </div>
-      <div class="card-scope">
-        <span class="scope-tag">Finished Goods</span>
-        <span class="scope-tag">Brand Distribution</span>
-        <span class="scope-tag">Product Sourcing</span>
-      </div>
-      <div class="card-actions">
-        <a class="action-btn email" href="mailto:tony@having.co.kr">
-          <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-          Email Tony — tony@having.co.kr
-        </a>
-        <a class="action-btn whatsapp"
-           href="https://wa.me/821022030913"
-           target="_blank"
-           rel="noopener noreferrer">
-          <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-          WhatsApp Tony — +82 10-2203-0913
-        </a>
-        <a class="action-btn vcard"
-           href="vcard/tony-kim-having.vcf"
-           download="tony-kim-having.vcf">
-          <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-          Save Tony's Contact
-        </a>
+        <div class="toggle-chevron">
+          <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+      </button>
+      <div class="contact-body" id="body-james">
+        <div class="card-scope">
+          <span class="scope-tag">Raw Materials</span>
+          <span class="scope-tag">Ingredients</span>
+          <span class="scope-tag">Manufacturing Partnership</span>
+        </div>
+        <div class="card-actions">
+          <a class="action-btn email" href="mailto:james@having.co.kr">
+            <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            Email James — james@having.co.kr
+          </a>
+          <a class="action-btn whatsapp" href="https://wa.me/821075999210" target="_blank" rel="noopener noreferrer">
+            <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+            WhatsApp James — +82 10-7599-9210
+          </a>
+          <a class="action-btn vcard" href="vcard/james-choi-having.vcf" download="james-choi-having.vcf">
+            <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            Save James's Contact
+          </a>
+        </div>
       </div>
     </div>
 
-    <!-- James Choi — Raw Materials -->
-    <div class="contact-card">
-      <div class="card-stripe green"></div>
-      <div class="card-head">
-        <div class="avatar">JC</div>
-        <div class="card-identity">
-          <div class="card-name">James Choi</div>
-          <div class="card-role">CEO · HAVING Corp.</div>
+    <!-- Tony Kim — Finished Goods (아래) -->
+    <div class="contact-card" id="card-tony">
+      <button class="card-toggle" onclick="toggleCard('tony')">
+        <div class="card-toggle-left">
+          <div class="avatar">TK</div>
+          <div>
+            <div class="card-name">Tony Kim</div>
+            <div class="card-role">Overseas Sales · HAVING Corp.</div>
+          </div>
         </div>
-      </div>
-      <div class="card-scope">
-        <span class="scope-tag">Raw Materials</span>
-        <span class="scope-tag">Ingredients</span>
-        <span class="scope-tag">Manufacturing Partnership</span>
-      </div>
-      <div class="card-actions">
-        <a class="action-btn email" href="mailto:james@having.co.kr">
-          <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-          Email James — james@having.co.kr
-        </a>
-        <a class="action-btn whatsapp"
-           href="https://wa.me/821075999210"
-           target="_blank"
-           rel="noopener noreferrer">
-          <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-          WhatsApp James — +82 10-7599-9210
-        </a>
-        <a class="action-btn vcard"
-           href="vcard/james-choi-having.vcf"
-           download="james-choi-having.vcf">
-          <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-          Save James's Contact
-        </a>
+        <div class="toggle-chevron">
+          <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+      </button>
+      <div class="contact-body" id="body-tony">
+        <div class="card-scope">
+          <span class="scope-tag">Finished Goods</span>
+          <span class="scope-tag">Brand Distribution</span>
+          <span class="scope-tag">Product Sourcing</span>
+        </div>
+        <div class="card-actions">
+          <a class="action-btn email" href="mailto:tony@having.co.kr">
+            <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            Email Tony — tony@having.co.kr
+          </a>
+          <a class="action-btn whatsapp" href="https://wa.me/821022030913" target="_blank" rel="noopener noreferrer">
+            <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+            WhatsApp Tony — +82 10-2203-0913
+          </a>
+          <a class="action-btn vcard" href="vcard/tony-kim-having.vcf" download="tony-kim-having.vcf">
+            <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            Save Tony's Contact
+          </a>
+        </div>
       </div>
     </div>
 
   </div>
 </section>
 
-<!-- FOOTER NOTE -->
 <div class="footer-note">
-  <p>
-    For finished goods, brand distribution, and product sourcing, please contact Tony Kim.
-    <span class="vn">Đối với thành phẩm, phân phối thương hiệu và sourcing sản phẩm, vui lòng liên hệ Tony Kim.</span>
-  </p>
   <p>
     For raw materials, ingredients, and manufacturing partnerships, please contact James Choi.
     <span class="vn">Đối với nguyên liệu, hoạt chất và hợp tác sản xuất, vui lòng liên hệ James Choi.</span>
   </p>
+  <p>
+    For finished goods, brand distribution, and product sourcing, please contact Tony Kim.
+    <span class="vn">Đối với thành phẩm, phân phối thương hiệu và sourcing sản phẩm, vui lòng liên hệ Tony Kim.</span>
+  </p>
 </div>
 
-<!-- FOOTER — dark section (brand pattern) -->
 <footer class="site-footer">
   <div class="footer-logo">Having</div>
   <div class="footer-meta">
     HAVING Corp. · Korea<br>
-    <a href="https://catalog.having.co.kr/vietnam2026">catalog.having.co.kr/vietnam2026</a><br>
-    Catalog Design System v6
+    <a href="https://catalog.having.co.kr/vietnam2026">catalog.having.co.kr/vietnam2026</a>
   </div>
 </footer>
+
+<script>
+function toggleCard(id) {
+  const card = document.getElementById('card-' + id);
+  const body = document.getElementById('body-' + id);
+  const isOpen = card.classList.contains('open');
+  card.classList.toggle('open', !isOpen);
+  body.classList.toggle('open', !isOpen);
+}
+
+function toggleContact() {
+  const section = document.getElementById('contact');
+  section.scrollIntoView({ behavior: 'smooth' });
+}
+</script>
 
 </body>
 </html>
