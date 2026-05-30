@@ -9,439 +9,437 @@
 <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 <style>
-/* ─── COLLAPSED CONTACT ─── */
-.contact-body {
-  overflow: hidden;
-  max-height: 0;
-  transition: max-height 0.35s ease;
-}
-.contact-body.open {
-  max-height: 600px;
+/* ─── TOKENS ─── */
+:root {
+  --g: 20px;          /* 단일 좌우 기준 */
+  --max: 520px;
+  --orange: #E87722;
+  --green:  #5DB075;
+  --ink:    #1A1A18;
+  --muted:  #72726A;
+  --light:  #AAAAAA;
+  --line:   #E8E8E0;
+  --bg:     #FFFFFF;
+  --soft:   #FAFAF8;
+  --r:      4px;
+  --font-d: 'Libre Baskerville', Georgia, serif;
+  --font-b: 'Calibri', 'Gill Sans', system-ui, sans-serif;
 }
 
-.card-toggle {
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html  { scroll-behavior: smooth; }
+body  { font-family: var(--font-b); background: var(--bg); color: var(--muted);
+        -webkit-font-smoothing: antialiased; -webkit-text-size-adjust: 100%; }
+
+/* ─── LAYOUT WRAPPER ─── */
+.wrap {
   width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 18px 20px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  text-align: left;
-}
-
-.toggle-chevron {
-  width: 20px;
-  height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  transition: transform 0.3s ease;
-}
-.toggle-chevron svg {
-  width: 14px;
-  height: 14px;
-  stroke: #888;
-  fill: none;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-.contact-card.open .toggle-chevron {
-  transform: rotate(180deg);
-}
-
-/* ─── MINIMAL OVERRIDES ─── */
-/* Strip shadows, reduce noise, b&w base */
-body { background: #fff; }
-
-.header {
-  border-bottom: 1px solid #e8e8e0;
-  background: #fff;
-  padding: 14px 24px;
-}
-.header-left { color: #aaa; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; }
-
-.logo { color: #1a1a18; font-size: 17px; }
-.logo-dot { background: #E87722; width: 5px; height: 5px; }
-
-/* Hero — tighter, cleaner */
-.hero {
-  padding: 48px 24px 32px;
-  text-align: center;
-  max-width: 480px;
+  max-width: var(--max);
   margin: 0 auto;
+  padding: 0 var(--g);
+}
+
+/* ─── HEADER ─── */
+.header {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+  padding: 13px var(--g);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.header-left { font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--light); }
+.logo {
+  font-family: var(--font-d); font-size: 17px; font-weight: 700;
+  color: var(--ink); text-decoration: none;
+  display: flex; align-items: center; gap: 5px;
+}
+.logo-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--orange); flex-shrink: 0; }
+
+/* ─── HERO ─── */
+.hero {
+  padding: 48px 0 32px;
+  text-align: center;
 }
 .exhibit-badge {
-  font-size: 9px;
-  letter-spacing: 0.3em;
-  border: 1px solid #e8e8e0;
-  color: #aaa;
-  border-radius: 2px;
-  padding: 4px 10px;
-  margin-bottom: 28px;
   display: inline-block;
+  font-size: 9px; letter-spacing: 0.28em; text-transform: uppercase;
+  color: var(--light); border: 1px solid var(--line);
+  border-radius: 2px; padding: 4px 10px; margin-bottom: 26px;
 }
 .hero-title {
-  font-family: 'Libre Baskerville', Georgia, serif;
-  font-size: clamp(38px, 10vw, 54px);
-  font-weight: 700;
-  color: #1a1a18;
-  line-height: 1.0;
-  letter-spacing: -0.02em;
-  margin-bottom: 6px;
+  font-family: var(--font-d);
+  font-size: clamp(40px, 10vw, 56px);
+  font-weight: 700; color: var(--ink);
+  line-height: 1.0; letter-spacing: -0.02em; margin-bottom: 4px;
 }
-.hero-title .accent { color: #E87722; font-style: italic; font-weight: 400; }
+.hero-title .accent { color: var(--orange); font-style: italic; font-weight: 400; }
 .hero-year {
-  font-family: 'Libre Baskerville', Georgia, serif;
-  font-size: 18px;
-  font-weight: 400;
-  font-style: italic;
-  color: #aaa;
-  margin-bottom: 28px;
-  letter-spacing: 0.08em;
+  font-family: var(--font-d); font-size: 17px;
+  font-weight: 400; font-style: italic;
+  color: var(--light); margin-bottom: 26px; letter-spacing: 0.1em;
 }
-.divider-rule { width: 32px; height: 1px; background: #e8e8e0; margin: 0 auto 24px; }
-.hero-desc { font-size: 13.5px; line-height: 1.75; color: #72726a; }
+.divider-rule { width: 28px; height: 1px; background: var(--line); margin: 0 auto 22px; }
+.hero-desc { font-size: 13.5px; line-height: 1.75; color: var(--muted); }
 .hero-desc .vn {
-  display: block;
-  margin-top: 10px;
-  font-size: 12px;
-  color: #bbb;
-  border-top: 1px solid #f0f0ea;
-  padding-top: 10px;
-  font-style: italic;
+  display: block; margin-top: 10px; font-size: 11.5px;
+  color: #C8C8C0; border-top: 1px solid var(--line);
+  padding-top: 10px; font-style: italic;
 }
 
-/* Catalog buttons — ultra clean */
+/* ─── CATALOG BUTTONS ─── */
 .catalog-section {
-  padding: 0 24px 8px;
-  max-width: 480px;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  display: flex; flex-direction: column; gap: 8px;
+  padding-bottom: 8px;
 }
+/* PDF — border only */
 .btn-pdf {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 18px;
-  background: #fff;
-  border: 1px solid #e8e8e0;
-  border-radius: 4px;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 15px 16px;
+  background: var(--bg); border: 1px solid var(--line); border-radius: var(--r);
   text-decoration: none;
   transition: border-color 0.15s;
   -webkit-tap-highlight-color: transparent;
 }
-.btn-pdf:active { border-color: #E87722; }
+.btn-pdf:active { border-color: var(--orange); }
 .btn-pdf-inner { display: flex; align-items: center; gap: 12px; }
 .btn-pdf-icon {
-  width: 32px; height: 32px;
-  border: 1px solid #e8e8e0;
-  border-radius: 4px;
+  width: 30px; height: 30px;
+  border: 1px solid var(--line); border-radius: 3px;
   display: flex; align-items: center; justify-content: center;
-  background: #fafaf8;
-  flex-shrink: 0;
+  background: var(--soft); flex-shrink: 0;
 }
-.btn-pdf-icon svg { width: 14px; height: 14px; stroke: #E87722; fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
-.btn-pdf-label { font-family: 'Libre Baskerville', Georgia, serif; font-size: 15px; font-weight: 700; color: #1a1a18; display: block; line-height: 1.1; }
-.btn-pdf-sub { font-size: 10.5px; color: #aaa; margin-top: 2px; display: block; letter-spacing: 0.02em; }
-.btn-arrow { width: 26px; height: 26px; border: 1px solid #e8e8e0; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.btn-arrow svg { width: 11px; height: 11px; stroke: #bbb; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.btn-pdf-icon svg { width: 13px; height: 13px; stroke: var(--orange); fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.btn-pdf-label { font-family: var(--font-d); font-size: 15px; font-weight: 700; color: var(--ink); display: block; line-height: 1.1; }
+.btn-pdf-sub   { font-size: 10px; color: var(--light); margin-top: 2px; display: block; }
+.btn-arrow {
+  width: 24px; height: 24px; border: 1px solid var(--line);
+  border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.btn-arrow svg { width: 10px; height: 10px; stroke: var(--light); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
+/* CTA — filled black (Contact HAVING) */
 .btn-cta {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 16px 18px;
-  background: #1a1a18;
-  border: 1px solid #1a1a18;
-  border-radius: 4px;
+  padding: 15px 16px;
+  background: var(--ink); border: 1px solid var(--ink); border-radius: var(--r);
   cursor: pointer; width: 100%;
   transition: opacity 0.15s;
   -webkit-tap-highlight-color: transparent;
 }
 .btn-cta:active { opacity: 0.85; }
-.btn-cta-inner { display: flex; align-items: center; gap: 12px; }
+.btn-cta.active { background: #2d2d2b; }
+.btn-cta-inner  { display: flex; align-items: center; gap: 12px; }
 .btn-cta-icon {
-  width: 32px; height: 32px;
-  border: 1px solid rgba(255,255,255,0.15);
-  border-radius: 4px;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
+  width: 30px; height: 30px;
+  border: 1px solid rgba(255,255,255,0.15); border-radius: 3px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
-.btn-cta-icon svg { width: 14px; height: 14px; stroke: #fff; fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
-.btn-cta-label { font-family: 'Libre Baskerville', Georgia, serif; font-size: 15px; font-weight: 700; color: #fff; display: block; line-height: 1.1; }
-.btn-cta-sub { font-size: 10.5px; color: rgba(255,255,255,0.45); margin-top: 2px; display: block; }
+.btn-cta-icon svg { width: 13px; height: 13px; stroke: #fff; fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.btn-cta-label { font-family: var(--font-d); font-size: 15px; font-weight: 700; color: #fff; display: block; line-height: 1.1; }
+.btn-cta-sub   { font-size: 10px; color: rgba(255,255,255,0.4); margin-top: 2px; display: block; }
 .btn-cta .btn-arrow { border-color: rgba(255,255,255,0.15); }
-.btn-cta .btn-arrow svg { stroke: rgba(255,255,255,0.5); }
+.btn-cta .btn-arrow svg { stroke: rgba(255,255,255,0.4); }
+.btn-cta .cta-chevron { transition: transform 0.3s ease; }
+.btn-cta.active .cta-chevron { transform: rotate(180deg); }
 
-/* Section header */
-.section-header {
-  padding: 44px 24px 0;
-  max-width: 480px;
-  margin: 0 auto;
-}
-.section-label { font-size: 8px; letter-spacing: 0.3em; text-transform: uppercase; color: #E87722; font-weight: 700; margin-bottom: 5px; }
-.section-title { font-family: 'Libre Baskerville', Georgia, serif; font-size: 22px; font-weight: 700; color: #1a1a18; letter-spacing: -0.01em; }
-
-/* Contact cards — collapsible, minimal */
-.contacts {
-  padding: 16px 24px 0;
-  max-width: 480px;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.contact-card {
-  border: 1px solid #e8e8e0;
-  border-radius: 4px;
-  background: #fff;
+/* ─── CONTACT SECTION (collapsible) ─── */
+#contact-section {
   overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.4s ease;
+}
+#contact-section.open {
+  max-height: 900px;
+}
+
+/* Guide row above cards */
+.contact-guide {
+  display: flex;
+  gap: 8px;
+  padding: 16px 0 4px;
+}
+.guide-chip {
+  flex: 1;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  padding: 10px 12px;
+  background: var(--soft);
+}
+.guide-chip-label {
+  font-size: 8.5px; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--light); margin-bottom: 4px;
+}
+.guide-chip-name {
+  font-family: var(--font-d); font-size: 13px; font-weight: 700;
+  color: var(--ink);
+}
+.guide-chip-scope {
+  font-size: 10px; color: var(--muted); margin-top: 2px; line-height: 1.4;
+}
+
+/* Cards */
+.contacts { display: flex; flex-direction: column; gap: 8px; padding-bottom: 0; }
+
+.contact-card {
+  border: 1px solid var(--line); border-radius: var(--r);
+  background: var(--bg); overflow: hidden;
 }
 .contact-card.open { border-color: #d0d0c5; }
 
-/* Toggle header */
+.card-toggle {
+  width: 100%; display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 16px;
+  background: none; border: none; cursor: pointer;
+  -webkit-tap-highlight-color: transparent; text-align: left;
+}
 .card-toggle-left { display: flex; align-items: center; gap: 12px; }
 .avatar {
-  width: 36px; height: 36px;
-  border: 1px solid #e8e8e0;
-  border-radius: 3px;
+  width: 34px; height: 34px;
+  border: 1px solid var(--line); border-radius: 3px;
   display: flex; align-items: center; justify-content: center;
-  font-family: 'Libre Baskerville', Georgia, serif;
-  font-size: 11px; font-weight: 700;
-  color: #1a1a18;
-  background: #fafaf8;
-  flex-shrink: 0;
-  letter-spacing: 0.02em;
+  font-family: var(--font-d); font-size: 10px; font-weight: 700;
+  color: var(--ink); background: var(--soft); flex-shrink: 0;
 }
-.card-name { font-family: 'Libre Baskerville', Georgia, serif; font-size: 16px; font-weight: 700; color: #1a1a18; line-height: 1.1; }
-.card-role { font-size: 10.5px; color: #aaa; margin-top: 2px; letter-spacing: 0.02em; }
+.card-name { font-family: var(--font-d); font-size: 15px; font-weight: 700; color: var(--ink); line-height: 1.1; }
+.card-role { font-size: 10px; color: var(--light); margin-top: 2px; }
 
-/* Scope row */
+.toggle-chevron {
+  width: 18px; height: 18px; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: transform 0.3s ease;
+}
+.toggle-chevron svg { width: 13px; height: 13px; stroke: #bbb; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.contact-card.open .toggle-chevron { transform: rotate(180deg); }
+
+.contact-body { overflow: hidden; max-height: 0; transition: max-height 0.32s ease; }
+.contact-body.open { max-height: 400px; }
+
 .card-scope {
-  padding: 10px 20px 10px;
-  border-top: 1px solid #f0f0ea;
+  padding: 8px 16px 10px;
+  border-top: 1px solid var(--line);
   display: flex; flex-wrap: wrap; gap: 5px;
 }
 .scope-tag {
-  font-size: 9.5px; letter-spacing: 0.05em;
-  color: #888;
-  border: 1px solid #e8e8e0;
-  border-radius: 2px;
-  padding: 3px 8px;
-  background: #fff;
+  font-size: 9.5px; letter-spacing: 0.04em; color: var(--muted);
+  border: 1px solid var(--line); border-radius: 2px;
+  padding: 3px 8px; background: var(--bg);
 }
 
-/* Action buttons */
-.card-actions { padding: 10px 16px 14px; display: flex; flex-direction: column; gap: 6px; }
+.card-actions { padding: 8px 14px 14px; display: flex; flex-direction: column; gap: 6px; }
 .action-btn {
   display: flex; align-items: center; gap: 9px;
-  padding: 11px 14px;
-  border-radius: 3px;
-  text-decoration: none;
-  font-size: 12.5px;
-  font-weight: 500;
-  border: 1px solid #e8e8e0;
-  background: #fff;
-  color: #1a1a18;
+  padding: 11px 13px;
+  border-radius: 3px; text-decoration: none;
+  font-size: 12.5px; font-family: var(--font-b); font-weight: 500;
+  border: 1px solid var(--line); background: var(--bg); color: var(--ink);
   cursor: pointer; width: 100%; text-align: left;
   transition: border-color 0.12s;
   -webkit-tap-highlight-color: transparent;
 }
 .action-btn:active { border-color: #bbb; }
-.action-btn svg { width: 14px; height: 14px; flex-shrink: 0; fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; stroke: #aaa; }
-
+.action-btn svg { width: 13px; height: 13px; flex-shrink: 0; fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; stroke: var(--light); }
 .action-btn.whatsapp { border-color: #c5e0bf; background: #f4fbf5; color: #1a5c2e; }
-.action-btn.whatsapp svg { stroke: #5DB075; }
+.action-btn.whatsapp svg { stroke: var(--green); }
+.action-btn.vcard    { background: var(--ink); border-color: var(--ink); color: #fff; }
+.action-btn.vcard svg { stroke: rgba(255,255,255,0.55); }
 
-.action-btn.vcard { background: #1a1a18; border-color: #1a1a18; color: #fff; }
-.action-btn.vcard svg { stroke: rgba(255,255,255,0.6); }
-
-/* Footer note */
+/* ─── FOOTER NOTE ─── */
 .footer-note {
-  margin: 36px 24px 0;
-  max-width: 480px;
-  margin-left: auto; margin-right: auto;
-  border-top: 1px solid #e8e8e0;
-  padding-top: 20px;
+  padding: 28px 0 0;
+  border-top: 1px solid var(--line);
+  margin-top: 36px;
 }
-.footer-note p { font-size: 12px; color: #aaa; line-height: 1.7; }
+.footer-note p { font-size: 11.5px; color: var(--light); line-height: 1.7; }
 .footer-note p + p { margin-top: 8px; }
-.footer-note .vn { display: block; font-size: 11px; color: #ccc; font-style: italic; margin-top: 2px; }
+.footer-note .vn { display: block; font-size: 10.5px; color: #ccc; font-style: italic; margin-top: 1px; }
 
-/* Footer */
+/* ─── FOOTER ─── */
 .site-footer {
-  margin-top: 40px;
-  background: #1a1a18;
-  padding: 28px 24px 48px;
+  margin-top: 36px;
+  background: var(--ink);
+  padding: 28px var(--g) 52px;
   text-align: center;
 }
-.footer-logo { font-family: 'Libre Baskerville', Georgia, serif; font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 8px; letter-spacing: -0.01em; }
-.footer-meta { font-size: 10.5px; color: rgba(255,255,255,0.3); letter-spacing: 0.06em; line-height: 2; }
-.footer-meta a { color: rgba(255,255,255,0.4); text-decoration: none; }
+.footer-logo { font-family: var(--font-d); font-size: 19px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+.footer-meta { font-size: 10px; color: rgba(255,255,255,0.3); letter-spacing: 0.06em; line-height: 2; }
+.footer-meta a { color: rgba(255,255,255,0.38); text-decoration: none; }
 </style>
 </head>
 <body>
 
+<!-- HEADER -->
 <header class="header">
   <span class="header-left">Vietnam 2026</span>
   <a class="logo" href="#">Having<span class="logo-dot"></span></a>
 </header>
 
-<section class="hero">
-  <div class="exhibit-badge">K-Beauty · Exhibition</div>
-  <h1 class="hero-title">HAVING<br><span class="accent">Vietnam</span></h1>
-  <p class="hero-year">2026</p>
-  <div class="divider-rule"></div>
-  <p class="hero-desc">
-    Explore HAVING's selected K-Beauty portfolio for Vietnam 2026.
-    Choose your preferred catalog or contact the right person directly.
-    <span class="vn">Khám phá danh mục K-Beauty được tuyển chọn của HAVING cho Vietnam 2026.
-    Vui lòng chọn catalog hoặc liên hệ trực tiếp với người phụ trách.</span>
-  </p>
-</section>
+<!-- HERO -->
+<div class="wrap">
+  <section class="hero">
+    <div class="exhibit-badge">K-Beauty · Exhibition</div>
+    <h1 class="hero-title">HAVING<br><span class="accent">Vietnam</span></h1>
+    <p class="hero-year">2026</p>
+    <div class="divider-rule"></div>
+    <p class="hero-desc">
+      Explore HAVING's selected K-Beauty portfolio for Vietnam 2026.
+      Choose your preferred catalog or contact the right person directly.
+      <span class="vn">Khám phá danh mục K-Beauty được tuyển chọn của HAVING cho Vietnam 2026.
+      Vui lòng chọn catalog hoặc liên hệ trực tiếp với người phụ trách.</span>
+    </p>
+  </section>
 
-<div class="catalog-section">
-  <a class="btn-pdf" href="files/having-catalog-2026-en.pdf.pdf" target="_blank" rel="noopener noreferrer">
-    <div class="btn-pdf-inner">
-      <div class="btn-pdf-icon">
-        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+  <!-- CATALOG BUTTONS -->
+  <div class="catalog-section">
+    <a class="btn-pdf" href="files/having-catalog-2026-en.pdf.pdf" target="_blank" rel="noopener noreferrer">
+      <div class="btn-pdf-inner">
+        <div class="btn-pdf-icon">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+        </div>
+        <div>
+          <span class="btn-pdf-label">English Catalog</span>
+          <span class="btn-pdf-sub">View PDF · 2026 Edition</span>
+        </div>
       </div>
-      <div>
-        <span class="btn-pdf-label">English Catalog</span>
-        <span class="btn-pdf-sub">View PDF · 2026 Edition</span>
-      </div>
-    </div>
-    <div class="btn-arrow"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
-  </a>
+      <div class="btn-arrow"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+    </a>
 
-  <a class="btn-pdf" href="files/having-catalog-2026-vn.pdf.pdf" target="_blank" rel="noopener noreferrer">
-    <div class="btn-pdf-inner">
-      <div class="btn-pdf-icon">
-        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+    <a class="btn-pdf" href="files/having-catalog-2026-vn.pdf.pdf" target="_blank" rel="noopener noreferrer">
+      <div class="btn-pdf-inner">
+        <div class="btn-pdf-icon">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+        </div>
+        <div>
+          <span class="btn-pdf-label">Vietnamese Catalog</span>
+          <span class="btn-pdf-sub">Xem Catalog tiếng Việt · 2026</span>
+        </div>
       </div>
-      <div>
-        <span class="btn-pdf-label">Vietnamese Catalog</span>
-        <span class="btn-pdf-sub">Xem Catalog tiếng Việt · 2026</span>
-      </div>
-    </div>
-    <div class="btn-arrow"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
-  </a>
+      <div class="btn-arrow"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
+    </a>
 
-  <button class="btn-cta" onclick="toggleContact()">
-    <div class="btn-cta-inner">
-      <div class="btn-cta-icon">
-        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    <!-- CTA — toggles contact section -->
+    <button class="btn-cta" id="btn-contact" onclick="toggleContact()">
+      <div class="btn-cta-inner">
+        <div class="btn-cta-icon">
+          <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <div>
+          <span class="btn-cta-label">Contact HAVING</span>
+          <span class="btn-cta-sub">Finished Goods · Raw Materials</span>
+        </div>
       </div>
-      <div>
-        <span class="btn-cta-label">Contact HAVING</span>
-        <span class="btn-cta-sub">Finished Goods · Raw Materials</span>
+      <div class="btn-arrow">
+        <svg class="cta-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
       </div>
-    </div>
-    <div class="btn-arrow"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
-  </button>
-</div>
-
-<section id="contact">
-  <div class="section-header">
-    <div class="section-label">Direct Contact</div>
-    <h2 class="section-title">Speak to the right person</h2>
+    </button>
   </div>
 
-  <div class="contacts">
+  <!-- CONTACT SECTION — hidden until button pressed -->
+  <div id="contact-section">
 
-    <!-- James Choi — Raw Materials (위) -->
-    <div class="contact-card" id="card-james">
-      <button class="card-toggle" onclick="toggleCard('james')">
-        <div class="card-toggle-left">
-          <div class="avatar">JC</div>
-          <div>
-            <div class="card-name">James Choi</div>
-            <div class="card-role">CEO · HAVING Corp.</div>
-          </div>
-        </div>
-        <div class="toggle-chevron">
-          <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
-        </div>
-      </button>
-      <div class="contact-body" id="body-james">
-        <div class="card-scope">
-          <span class="scope-tag">Raw Materials</span>
-          <span class="scope-tag">Ingredients</span>
-          <span class="scope-tag">Manufacturing Partnership</span>
-        </div>
-        <div class="card-actions">
-          <a class="action-btn email" href="mailto:james@having.co.kr">
-            <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-            Email James — james@having.co.kr
-          </a>
-          <a class="action-btn whatsapp" href="https://wa.me/821075999210" target="_blank" rel="noopener noreferrer">
-            <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-            WhatsApp James — +82 10-7599-9210
-          </a>
-          <a class="action-btn vcard" href="vcard/james-choi-having.vcf" download="james-choi-having.vcf">
-            <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            Save James's Contact
-          </a>
-        </div>
+    <!-- Guide chips: 원료 → 제임스 / 완제 → 토니 -->
+    <div class="contact-guide">
+      <div class="guide-chip">
+        <div class="guide-chip-label">Raw Materials</div>
+        <div class="guide-chip-name">James Choi</div>
+        <div class="guide-chip-scope">Ingredients · Manufacturing</div>
+      </div>
+      <div class="guide-chip">
+        <div class="guide-chip-label">Finished Goods</div>
+        <div class="guide-chip-name">Tony Kim</div>
+        <div class="guide-chip-scope">Brand Distribution · Sourcing</div>
       </div>
     </div>
 
-    <!-- Tony Kim — Finished Goods (아래) -->
-    <div class="contact-card" id="card-tony">
-      <button class="card-toggle" onclick="toggleCard('tony')">
-        <div class="card-toggle-left">
-          <div class="avatar">TK</div>
-          <div>
-            <div class="card-name">Tony Kim</div>
-            <div class="card-role">Overseas Sales · HAVING Corp.</div>
+    <!-- Cards -->
+    <div class="contacts" style="margin-top:8px;">
+
+      <!-- James Choi -->
+      <div class="contact-card" id="card-james">
+        <button class="card-toggle" onclick="toggleCard('james')">
+          <div class="card-toggle-left">
+            <div class="avatar">JC</div>
+            <div>
+              <div class="card-name">James Choi</div>
+              <div class="card-role">CEO · HAVING Corp.</div>
+            </div>
+          </div>
+          <div class="toggle-chevron"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
+        </button>
+        <div class="contact-body" id="body-james">
+          <div class="card-scope">
+            <span class="scope-tag">Raw Materials</span>
+            <span class="scope-tag">Ingredients</span>
+            <span class="scope-tag">Manufacturing Partnership</span>
+          </div>
+          <div class="card-actions">
+            <a class="action-btn email" href="mailto:james@having.co.kr">
+              <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              Email James — james@having.co.kr
+            </a>
+            <a class="action-btn whatsapp" href="https://wa.me/821075999210" target="_blank" rel="noopener noreferrer">
+              <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+              WhatsApp James — +82 10-7599-9210
+            </a>
+            <a class="action-btn vcard" href="vcard/james-choi-having.vcf" download="james-choi-having.vcf">
+              <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              Save James's Contact
+            </a>
           </div>
         </div>
-        <div class="toggle-chevron">
-          <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
-        </div>
-      </button>
-      <div class="contact-body" id="body-tony">
-        <div class="card-scope">
-          <span class="scope-tag">Finished Goods</span>
-          <span class="scope-tag">Brand Distribution</span>
-          <span class="scope-tag">Product Sourcing</span>
-        </div>
-        <div class="card-actions">
-          <a class="action-btn email" href="mailto:tony@having.co.kr">
-            <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-            Email Tony — tony@having.co.kr
-          </a>
-          <a class="action-btn whatsapp" href="https://wa.me/821022030913" target="_blank" rel="noopener noreferrer">
-            <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-            WhatsApp Tony — +82 10-2203-0913
-          </a>
-          <a class="action-btn vcard" href="vcard/tony-kim-having.vcf" download="tony-kim-having.vcf">
-            <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            Save Tony's Contact
-          </a>
+      </div>
+
+      <!-- Tony Kim -->
+      <div class="contact-card" id="card-tony">
+        <button class="card-toggle" onclick="toggleCard('tony')">
+          <div class="card-toggle-left">
+            <div class="avatar">TK</div>
+            <div>
+              <div class="card-name">Tony Kim</div>
+              <div class="card-role">Overseas Sales · HAVING Corp.</div>
+            </div>
+          </div>
+          <div class="toggle-chevron"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
+        </button>
+        <div class="contact-body" id="body-tony">
+          <div class="card-scope">
+            <span class="scope-tag">Finished Goods</span>
+            <span class="scope-tag">Brand Distribution</span>
+            <span class="scope-tag">Product Sourcing</span>
+          </div>
+          <div class="card-actions">
+            <a class="action-btn email" href="mailto:tony@having.co.kr">
+              <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              Email Tony — tony@having.co.kr
+            </a>
+            <a class="action-btn whatsapp" href="https://wa.me/821022030913" target="_blank" rel="noopener noreferrer">
+              <svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+              WhatsApp Tony — +82 10-2203-0913
+            </a>
+            <a class="action-btn vcard" href="vcard/tony-kim-having.vcf" download="tony-kim-having.vcf">
+              <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              Save Tony's Contact
+            </a>
+          </div>
         </div>
       </div>
-    </div>
 
+    </div><!-- /contacts -->
+  </div><!-- /contact-section -->
+
+  <!-- FOOTER NOTE -->
+  <div class="footer-note">
+    <p>
+      For raw materials, ingredients, and manufacturing partnerships, please contact James Choi.
+      <span class="vn">Đối với nguyên liệu, hoạt chất và hợp tác sản xuất, vui lòng liên hệ James Choi.</span>
+    </p>
+    <p>
+      For finished goods, brand distribution, and product sourcing, please contact Tony Kim.
+      <span class="vn">Đối với thành phẩm, phân phối thương hiệu và sourcing sản phẩm, vui lòng liên hệ Tony Kim.</span>
+    </p>
   </div>
-</section>
 
-<div class="footer-note">
-  <p>
-    For raw materials, ingredients, and manufacturing partnerships, please contact James Choi.
-    <span class="vn">Đối với nguyên liệu, hoạt chất và hợp tác sản xuất, vui lòng liên hệ James Choi.</span>
-  </p>
-  <p>
-    For finished goods, brand distribution, and product sourcing, please contact Tony Kim.
-    <span class="vn">Đối với thành phẩm, phân phối thương hiệu và sourcing sản phẩm, vui lòng liên hệ Tony Kim.</span>
-  </p>
-</div>
+</div><!-- /wrap -->
 
+<!-- FOOTER -->
 <footer class="site-footer">
   <div class="footer-logo">Having</div>
   <div class="footer-meta">
@@ -451,17 +449,23 @@ body { background: #fff; }
 </footer>
 
 <script>
+function toggleContact() {
+  const section = document.getElementById('contact-section');
+  const btn     = document.getElementById('btn-contact');
+  const isOpen  = section.classList.contains('open');
+  section.classList.toggle('open', !isOpen);
+  btn.classList.toggle('active', !isOpen);
+  if (!isOpen) {
+    setTimeout(() => section.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+  }
+}
+
 function toggleCard(id) {
   const card = document.getElementById('card-' + id);
   const body = document.getElementById('body-' + id);
   const isOpen = card.classList.contains('open');
   card.classList.toggle('open', !isOpen);
   body.classList.toggle('open', !isOpen);
-}
-
-function toggleContact() {
-  const section = document.getElementById('contact');
-  section.scrollIntoView({ behavior: 'smooth' });
 }
 </script>
 
